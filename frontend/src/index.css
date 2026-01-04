@@ -1,3 +1,23 @@
 @import "tailwindcss";
-@import "tailwindcss/preflight";
 @tailwind utilities;
+
+@font-face {
+    font-family: "PacificoRegular";
+    src: url("/Fonts/Pacifico-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("/Fonts/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Jersey10Regular";
+    src: url("/Fonts/Jersey10-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-display: swap;
+}
