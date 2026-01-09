@@ -14,7 +14,7 @@ FROM node:${NODE_VERSION}-alpine
 ENV NODE_ENV=development
 
 
-WORKDIR /usr/src/app
+WORKDIR /usr/frontend/src/app
 
 
 COPY package*.json ./
@@ -35,7 +35,7 @@ RUN npm install
 COPY . .
 
 # Fix permissions so Vite can write temp files
-RUN chown -R node:node /usr/src/app
+RUN chown -R node:node /usr/frontend/src/app
 
 # Run the application as a non-root user.
 USER node
