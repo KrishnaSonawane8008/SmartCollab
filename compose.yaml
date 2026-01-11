@@ -18,10 +18,58 @@ services:
       NODE_ENV: development
     volumes:
       - ./frontend:/usr/frontend/src/app
-      - /usr/frontend/src/app/node_modules
+      - frontend-node-modules-data:/usr/frontend/src/app/node_modules
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/usr/backend/src/app
+
+
+  postgresdb:
+    image: postgres
+    restart: always
+    user: postgres
+    secrets:
+      - postgresdb-password
+    volumes:
+      - postgresdb-data:/var/lib/postgresql
+      - ./backend/db_init:/docker-entrypoint-initdb.d:ro
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_DB=smartcollab_postgresdb
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgresdb-password
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  frontend-node-modules-data:
+  postgresdb-data:
+
+secrets:
+  postgresdb-password:
+    file: ./backend/secrets/postgres_password.txt
+  
+  
+  
 
 # The commented out section below is an example of how to define a PostgreSQL
-# database that your application can use. `depends_on` tells Docker Compose to
+# dattabase that your applicaion can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the
 # database data between container restarts. The `db-password` secret is used
 # to set the database password. You must create `db/password.txt` and add

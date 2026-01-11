@@ -1,5 +1,8 @@
 #backend
 .venv
+__pycache__
+\.env
+secrets
 
 # Logs
 logs
