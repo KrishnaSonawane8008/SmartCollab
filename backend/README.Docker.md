@@ -25,5 +25,8 @@ docs for more detail on building and pushing.
 #=======================================================================#
 docker command to access postgres db from terminal:
 docker compose exec <service_name> psql -U <user_name> -d <db_name>
-
 docker compose exec postgresdb psql -U app -d smartcollab_postgresdb
+
+docker command to drop all tables:
+
+docker exec -it smartcollab-backend-1 python -c "from database_operations import drop_all_tables_dockerExec; drop_all_tables_dockerExec()"

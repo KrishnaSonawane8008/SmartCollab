@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -19,6 +19,16 @@ class Community_Users(Base):
     user_id=Column(Integer, primary_key=True)
     community_id=Column(Integer, nullable=False)
     user_name=Column(String, nullable=False)
+
+
+#contains the list of all the communities a user is part of
+#one User_Communities table per user
+class User_Communities(Base):
+    __tablename__ = 'User_Communities'
+
+    user_id=Column(Integer, nullable=False)
+    community_id=Column(Integer, primary_key=True)
+    community_name=Column(String, nullable=False)
 
 
 #contains a list of all channels inside a community
@@ -61,5 +71,7 @@ class Users(Base):
     user_name= Column(String)
     user_email= Column(String, unique=True)
     user_password= Column(String)
+    access_token= Column(String, nullable=False)
+    expires_at=Column(DateTime(timezone=True))
 
 
