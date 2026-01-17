@@ -10,7 +10,7 @@ export function get_user(){
 
 export function login_user({username, email, password}){
     FetchRequest(
-        "/user_login",
+        "/auth/login",
         {
             method: "POST",
             headers: {
@@ -23,7 +23,7 @@ export function login_user({username, email, password}){
 
 export function get_refresh_token(){
     FetchRequest(
-        "/auth_refresh",
+        "/auth/refresh",
         {
             method: "POST",
             credentials: "include"
@@ -34,7 +34,7 @@ export function get_refresh_token(){
 
 export function test(){
     FetchRequest(
-        "/test",
+        "/users/test",
         {
             method: "POST",
             credentials: "include",

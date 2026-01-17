@@ -17,12 +17,12 @@ const Login = () => {
         Email: ${email}
         Password: ${password}
       `)  
-    // Login({
-    //   username: username, 
-    //   email: email, 
-    //   password: password
-    // })
-    Login_test()
+    Login({
+      username: username, 
+      email: email, 
+      password: password
+    })
+    // Login_test()
     // navigate("/chats"); 
   }
 
@@ -50,6 +50,14 @@ const Login = () => {
               >
                 <div className='text-white text-[0.9rem] leading-[1.5rem] mb-0.5'>
                   Login
+                </div>
+          </button>
+
+          <button className='bg-black my-3  w-fit  py-0.5 px-5 rounded-full' type="button"
+          onClick={()=>{Login_test()}}
+              >
+                <div className='text-white text-[0.9rem] leading-[1.5rem] mb-0.5'>
+                  Test
                 </div>
           </button>
         
