@@ -20,49 +20,70 @@ async function attach_AccessToken(request_options){
 
 }
 
-
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 export async function FetchRequest( 
         endpoint,
         options,
 ){
-    const some_url = `${BASE_URL}${endpoint}`;
-    try {
+    try{
+        const some_url = `${BASE_URL}${endpoint}`;
 
         
         attach_AccessToken(options)
-        console.log("sending request with options:","\n", options)
+        // console.log(`sending request to ${BASE_URL}${endpoint} with options:`,"\n", options)
 
         const response = await fetch(some_url, {...options});
 
         if (!response.ok) {
 
             if(response.status==401){
-                console.log("response status 401, sending response to /auth_refresh")
-                const refresh_response= await fetch(`${BASE_URL}/auth/refresh`, 
-                                                        {
-                                                            method: "POST",
-                                                            credentials: "include"
-                                                        } 
-                                                    );
 
-                if(!refresh_response.ok){
-                    access_token=null
-                    if(refresh_response.status==401){
-                        throw new Error(`Authorization Error: ${response.status}`);
-                        // logout user
-                    }
-                    throw new Error(`Response status: ${response.status}`);
-                    
+                if(endpoint=="/auth/login"){
+                    console.log("Error while login")
+                    throw new Error(`Login Error: ${await response.text()}`);
                 }
 
-                const refresh_result = await refresh_response.json();
-                access_token=refresh_result.new_AccessToken;
-                console.log("new access token set")
-                //retry the previous request
-                console.log("retrying the same request")
-                return await FetchRequest( endpoint, options )
+
+                console.log(`response status 401, sending request to ${BASE_URL}/auth/refresh`)
+
+                try{
+                    const refresh_response= await fetch(`${BASE_URL}/auth/refresh`, 
+                                                            {
+                                                                method: "POST",
+                                                                credentials: "include",
+                                                                headers: {
+                                                                    "Content-Type": "application/json",
+                                                                }
+                                                            } 
+                                                        );
+
+                    if(!refresh_response.ok){
+                        access_token=null
+                        if(refresh_response.status==401){
+                            console.log(`Refresh request Failed: ${await response.text()}`)
+                            window.location.href="/login"
+                            throw new Error(`Authorization Error: ${await response.text()}`);
+                        }
+                        throw new Error(`Access Token Refresh Error: ${await response.text()}`);
+                        
+                    }
+
+                    const refresh_result = await refresh_response.json();
+                    access_token=refresh_result.new_AccessToken;
+                    console.log("new access token set")
+                    //retry the previous request
+                    console.log("retrying the same request")
+                    return await FetchRequest( endpoint, options )
+                }catch(e){
+                    //redirect to login and rethrow error
+                    window.location.href="/login"
+                    console.log(e)
+                    throw e;
+                }
 
 
             }
@@ -74,14 +95,16 @@ export async function FetchRequest(
 
         const result = await response.json();
 
-        if(endpoint=="/user_login" && result.AccessToken){
+        if(endpoint=="/auth/login" && result.AccessToken){
+            console.log("manual login, setting up access token")
             access_token=result.AccessToken
         }
 
-        console.log("Server Response:","\n",result)
+        // console.log("Server Response:","\n",JSON.stringify(result, null, 2))
         return result
-    } catch (error) {
-        console.error(error.message);
-        return null;
+    }catch(e){
+        //rethrow error
+        throw e
     }
+
 }

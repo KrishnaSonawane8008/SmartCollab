@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Response, HTTPException, Cookie, status
+from fastapi import APIRouter, Response, HTTPException, Cookie, status, Depends, Request
 
 from database import session
 from datetime import timedelta, datetime, timezone
 from RequestModels import user_credentials
 
-from DB_Manipulation.user_operations import get_user_with_credentials, add_as_new_user, update_user_auth_info
+from DB_Manipulation.user_operations import get_user_with_email, add_as_new_user, update_user_auth_info
+from auth.dependencies import token_verification
 
-
+from utilities.colour_print import Print
 
 router=APIRouter()
 
@@ -19,6 +20,18 @@ def create_access_token(user_id, user_name):
     return {"new_access_token": token, "new_expiry":expires_at }
 
 
+def refresh_token_check(request: Request, refresh_token: str=Cookie(None)):
+
+    if request.method=="OPTIONS":
+        return None
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing refresh token"
+        )
+    return refresh_token
+
 
 
 @router.post("/login")
@@ -28,7 +41,8 @@ async def user_login(credentials: user_credentials, response: Response):
     db=session()
 
     #check if user already in DB
-    user = get_user_with_credentials(session=db, credentials=credentials)
+    user = get_user_with_email(session=db, email=credentials.email)
+
 
     if user is None:
         print("user doesnt exist, regestering as new user")
@@ -39,7 +53,12 @@ async def user_login(credentials: user_credentials, response: Response):
 
         db.commit()
         print(f'user {credentials.username} added to db')
-
+    else:
+        if user.user_name!=credentials.username or user.user_password!=credentials.password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="wrong username or password"
+            )
 
     db.close()
 
@@ -53,15 +72,14 @@ async def user_login(credentials: user_credentials, response: Response):
 
 
 
+@router.options("/refresh")
+async def refresh_options():
+    return {}
+
 
 @router.post("/refresh")
-async def get_refresh_token(refresh_token: str=Cookie(None)):
-    if not refresh_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing refresh token"
-        )
-    
+async def get_refresh_token(response: Response, refresh_token: str=Depends(refresh_token_check)):
+
     token_info=refresh_token.split("_")
 
     new_auth_info=create_access_token(user_id=token_info[0], user_name=token_info[1])
@@ -74,14 +92,21 @@ async def get_refresh_token(refresh_token: str=Cookie(None)):
         db.commit()
         db.close()
     except Exception as e:
+        Print.red("ERROR WHILE UPDATING USER INFO: ")
+        Print.yellow(f'   {e}')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e
+            detail={f'Error while updating access token: {e}'}
         )
     
-    print("from /auth/refresh new_AccessToken: ",refresh_token)
+    print("from /auth/refresh new_AccessToken: ",new_auth_info["new_access_token"])
 
-    return {"new_AccessToken":f'{token_info[0]}_{token_info[1]}'}
+    return {"new_AccessToken":f'{new_auth_info["new_access_token"]}'}
+
+
+@router.get("/cors_test")
+def cors_test(access_token: str=Depends(token_verification)):
+    return {"status": "ok"}
 
 
 

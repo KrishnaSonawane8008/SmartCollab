@@ -55,13 +55,15 @@ class Channel_Users(Base):
 
 #contains list of all the messages inside a channel
 #one Channel_Messages table per channel
+#tablename: Com:id_Channel:id_ChannelMessages
 class Channel_Messages(Base):
     __tablename__ = 'Channel_Messages'
 
     message_id= Column(Integer, primary_key=True, index=True)
-    channel_id= Column(Integer, nullable=False)
     sender_id= Column(Integer, nullable=False)
     message= Column(String, nullable=False)
+
+
 
 #contains list of all the users
 class Users(Base):

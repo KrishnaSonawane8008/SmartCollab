@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     element:<ChatLayout />,
     children: [
       {
-        path: ":conversationId",
+        path: ":communityId/:channelId",
         element: <ChatMessagesSection />
       },
     ]

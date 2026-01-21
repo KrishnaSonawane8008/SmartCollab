@@ -43,7 +43,6 @@ class Channel_User(BaseModel):
 #base class for each entry in Com:community_id_Channel:channel_id_ChannelMessages table
 class Channel_Message(BaseModel):
     message_id: int
-    channel_id: int
     sender_id: int#user_id of the user who sent the message
     message: str
 

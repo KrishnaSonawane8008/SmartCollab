@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Response, Depends
 from RequestModels import user_credentials
 from auth.dependencies import token_verification
-
+from DB_Manipulation.user_operations import get_user_communities, get_user_with_uid
+from database import session
 
 router = APIRouter()
 
+def get_uid(access_token: str):
+    return access_token.split("_")[0]
 
 @router.post("/test")
 def cookie_test(credentials: user_credentials, response: Response, access_token: str=Depends(token_verification)):
@@ -14,3 +17,32 @@ def cookie_test(credentials: user_credentials, response: Response, access_token:
     print(f'Credentials: {credentials.username}, {credentials.email}, {credentials.password}')
 
     return {"test":"test message"}
+
+
+@router.get("/profile")
+def get_user_profile(token: str=Depends(token_verification)):
+    uid=get_uid(access_token=token)
+
+    db=session()
+    user_info=get_user_with_uid(session=db, uid=uid)
+    db.commit()
+    db.close()
+
+    return {"UserInfo":{"username":user_info.user_name, "email":user_info.user_email}}
+
+
+
+
+@router.get("/communities")
+def user_communities(token: str=Depends(token_verification)):
+    uid=get_uid(access_token=token)
+
+    db=session()
+    user_comms=get_user_communities(session=db, uid=uid)
+    db.commit()
+    db.close()
+    # print(f'================{user_comms}================')
+
+    return {"UserCommunities":user_comms}
+
+

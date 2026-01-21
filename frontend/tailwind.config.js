@@ -9,6 +9,7 @@ export default {
             Inter: ['Inter', 'system-ui', 'sans-serif'],
             PacificoRegular: ['PacificoRegular', 'system-ui', 'sans-serif'],
             Jersey10Regular: ['Jersey10Regular', 'system-ui', 'sans-serif'],
+            PoppinsRegular: ['PoppinsRegular', 'system-ui', 'sans-serif'],
         },
 
     },

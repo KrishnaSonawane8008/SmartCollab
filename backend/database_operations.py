@@ -4,6 +4,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.schema import DropTable
 from sqlalchemy.orm import close_all_sessions, Session
 
+#takes model from database_models.py
 def create_table_from_model(model, table_name: str):
     metadata = MetaData()
 

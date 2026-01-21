@@ -14,8 +14,7 @@ from database_operations import drop_all_tables, is_database_empty
 # database_models.Base.metadata.create_all(bind=engine, tables=tables_to_create_on_init)
 
 
-from auth.endpoints import router as auth_router
-from users.endpoints import router as users_router
+
 
 
 app = FastAPI()
@@ -33,11 +32,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from auth.endpoints import router as auth_router
+from users.endpoints import router as users_router
+
+
+app.include_router(auth_router, prefix="/auth")
+app.include_router(users_router, prefix="/users")
+
+
+
 def init_db():
     close_all_sessions()
     drop_all_tables()
     db=session()
     populate_db(db)
+    db.commit()
     db.close()
         
 
@@ -50,10 +59,6 @@ def init_db():
 #         db.close()
 
 
-app.include_router(auth_router, prefix="/auth")
-app.include_router(users_router, prefix="/users")
-
-
 
 @app.get("/populate_db")
 async def initialize_db():
@@ -61,3 +66,7 @@ async def initialize_db():
         print("database is empty, filling with random data")
         init_db()
     return {"Hello": "Cruel World"}
+
+@app.get("/cors_test")
+def cors_test():
+    return {"status": "ok"}

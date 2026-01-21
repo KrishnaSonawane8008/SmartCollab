@@ -2,23 +2,21 @@ from RequestModels import user_credentials
 from sqlalchemy.orm import Session
 from database_operations import get_table_by_name
 from sqlalchemy import inspect, select, text, insert, update
-from models import User
+from models import User, User_Community
 from database_models import Users
 from datetime import datetime, timedelta, timezone
 
 #returns None if user doesnt exist in db, otherwise returns the user row corresponding to credentials
-def get_user_with_credentials(session: Session, credentials: user_credentials)->User:
+def get_user_with_email(session: Session, email: str)->User | None:
     users_table=get_table_by_name("Users")
 
     #bascially -
     # SELECT * FROM "USERS" 
     # WHERE 
-    # user_name=:credentials.username AND user_email=:credentials.email AND user_password=:credentials.password
+    # user_email=:credentials.email;
     user: list[User]=session.execute(
                                 select(users_table).where(
-                                        users_table.c.user_name==credentials.username,
-                                        users_table.c.user_email==credentials.email,
-                                        users_table.c.user_password==credentials.password
+                                        users_table.c.user_email==email,
                                         )
                             ).mappings().all()
     
@@ -29,7 +27,7 @@ def get_user_with_credentials(session: Session, credentials: user_credentials)->
 
 
 #same as get_user_with_credentials, but uses the user_id to retrieve user info
-def get_user_with_uid(session: Session, uid: int)->User:
+def get_user_with_uid(session: Session, uid: int)->User | None:
     users_table=get_table_by_name("Users")
 
     user: list[User]=session.execute(
@@ -80,9 +78,8 @@ def update_user_auth_info(session: Session, uid: int, new_access_token: str, new
         session.execute(
             update(users_table).where(users_table.c.user_id==uid).values(access_token=new_access_token, expires_at=new_expiry_time)
         )
-        print("=============Updated user Auth Info=============")
     else:
-        raise Exception("user doesnt exist in database/wrong uid provided")
+        raise Exception(f'user_id {uid} doesnt exist in database/wrong uid provided')
     
 
 
@@ -111,3 +108,18 @@ def add_as_new_user(session: Session, credentials: user_credentials)->User:
     )
 
     return new_user
+
+
+
+def get_user_communities(session: Session, uid:int)->list[User_Community] | None:
+    user_comm_table=get_table_by_name(f'User{uid}_Communities')
+
+    user_comms: list[User_Community]=session.execute(select(user_comm_table)).mappings().all()
+
+    if(len(user_comms)==0):
+        return None
+
+    return user_comms
+
+
+

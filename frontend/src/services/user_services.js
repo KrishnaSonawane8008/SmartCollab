@@ -8,8 +8,9 @@ export function get_user(){
     )
 }
 
-export function login_user({username, email, password}){
-    FetchRequest(
+export async function login_user({username, email, password}){
+    
+    return await FetchRequest(
         "/auth/login",
         {
             method: "POST",
@@ -19,16 +20,7 @@ export function login_user({username, email, password}){
             body: JSON.stringify({ username: username, email: email, password: password }),
         }
     )
-}
-
-export function get_refresh_token(){
-    FetchRequest(
-        "/auth/refresh",
-        {
-            method: "POST",
-            credentials: "include"
-        }
-    )
+    
 }
 
 
@@ -42,6 +34,47 @@ export function test(){
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({ username: "username", email: "name@email.com", password: "pass" }),
+        }
+    )
+}
+
+export async function cors_test(){
+    return await FetchRequest(
+        "/auth/cors_test",
+        {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        }
+    )
+}
+
+
+export async function get_user_profile(){
+    return await FetchRequest(
+        "/users/profile",
+        {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        }
+    )
+}
+
+
+export async function get_communities(){
+    return await FetchRequest(
+        "/users/communities",
+        {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            }
         }
     )
 }

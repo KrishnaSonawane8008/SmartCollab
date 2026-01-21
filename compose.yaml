@@ -19,6 +19,7 @@ services:
     volumes:
       - ./frontend:/usr/frontend/src/app
       - frontend-node-modules-data:/usr/frontend/src/app/node_modules
+    command: sh -c "npm install && npm run dev"
 
   backend:
     build:
