@@ -1,79 +1,102 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-#contains the list of all the communities
-class Communties(Base):
-    __tablename__ = 'Communities'
 
-    community_id= Column(Integer, primary_key=True, index=True)
-    community_name= Column(String)
-
-
-#contains a list of all the users inside a community
-#one Community_Users table per community
-class Community_Users(Base):
-    __tablename__ = 'Community_Users'
-
-    user_id=Column(Integer, primary_key=True)
-    community_id=Column(Integer, nullable=False)
-    user_name=Column(String, nullable=False)
-
-
-#contains the list of all the communities a user is part of
-#one User_Communities table per user
-class User_Communities(Base):
-    __tablename__ = 'User_Communities'
-
-    user_id=Column(Integer, nullable=False)
-    community_id=Column(Integer, primary_key=True)
-    community_name=Column(String, nullable=False)
-
-
-#contains a list of all channels inside a community
-#one Channels tables per community
-class Channels(Base):
-    __tablename__ = 'Channels'
-
-    channel_id= Column(Integer, primary_key=True, index=True)
-    channel_name= Column(String, nullable=False)
-    community_id= Column(Integer, nullable=False)#repeate data
-
-
-#contains list of all the users inside a channel
-#one Channel_Users table per channel
-class Channel_Users(Base):
-    __tablename__ = 'Channel_Users'
-
-    user_id= Column(Integer, primary_key=True)
-    channel_id= Column(Integer, nullable=False)#repeated data
-    community_id=Column( Integer, nullable=False )
-    user_name= Column(String, nullable=False)
-
-
-
-#contains list of all the messages inside a channel
-#one Channel_Messages table per channel
-#tablename: Com:id_Channel:id_ChannelMessages
-class Channel_Messages(Base):
-    __tablename__ = 'Channel_Messages'
-
-    message_id= Column(Integer, primary_key=True, index=True)
-    sender_id= Column(Integer, nullable=False)
-    message= Column(String, nullable=False)
-
-
-
-#contains list of all the users
+#contains all the users
 class Users(Base):
     __tablename__ = 'Users'
     
     user_id = Column(Integer, primary_key=True, index=True)
-    user_name= Column(String)
+    user_name= Column(String, nullable=False)
     user_email= Column(String, unique=True)
-    user_password= Column(String)
-    access_token= Column(String, nullable=False)
-    expires_at=Column(DateTime(timezone=True))
+    user_password= Column(String, nullable=False)
+    created_at=Column(DateTime(timezone=True))
 
 
+
+#contains the list of all the communities a user is part of
+class Access_Tokens(Base):
+    __tablename__ = 'Access_Tokens'
+
+    user_id=Column(Integer, ForeignKey("Users.user_id"), primary_key=True)
+    value=Column(String, nullable=False)
+    expires_at=Column(DateTime(timezone=True), nullable=False)
+
+
+
+#contains all the communities
+class Communities(Base):
+    __tablename__ = 'Communities'
+
+    community_id= Column(Integer, primary_key=True, index=True)
+    community_name= Column(String, nullable=False)
+    created_at=Column(DateTime(timezone=True))
+
+
+
+#contains all the channels
+class Channels(Base):
+    __tablename__ = 'Channels'
+
+    channel_id= Column(Integer, primary_key=True, index=True)
+    community_id= Column(Integer, ForeignKey("Communities.community_id"), primary_key=True)#fk
+    channel_name= Column(String, nullable=False)
+    created_at=Column(DateTime(timezone=True))
+
+
+#contains all the users of the community, pk
+class Community_Members(Base):
+    __tablename__ = 'Community_Members'
+
+    user_id=Column(Integer, ForeignKey("Users.user_id"), primary_key=True)#fk
+    community_id=Column(Integer, ForeignKey("Communities.community_id"), primary_key=True)#fk
+    user_name= Column(String, nullable=False)
+    community_name= Column(String, nullable=False)
+    joined_at=Column(DateTime(timezone=True))
+    roles=Column(String, nullable=False)
+
+
+#contains all the users of a channel
+class Channel_Members(Base):
+    __tablename__ = 'Channel_Members'
+    
+    community_id=Column(Integer, primary_key=True)
+    channel_id=Column(Integer, primary_key=True)
+    
+    user_name= Column(String, nullable=False)
+    community_name=Column(String, nullable=False)
+    channel_name=Column(String, nullable=False)
+    joined_at=Column(DateTime(timezone=True))
+    roles=Column(String, nullable=False)
+
+    __table_args__=(
+        ForeignKeyConstraint(
+            ["community_id", "channel_id"],
+            ["Channels.community_id", "Channels.channel_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    user_id=Column(Integer, ForeignKey("Users.user_id"), primary_key=True)
+
+
+#contains ALL the messages
+class Messages(Base):
+    __tablename__ = 'Messages'
+
+    message_id= Column(Integer, primary_key=True, index=True)
+    sender_id=Column(Integer, ForeignKey("Users.user_id"), nullable=False)
+    community_id=Column(Integer, nullable=False)
+    channel_id=Column(Integer, nullable=False)
+    message=Column(String)
+    sent_at=Column(DateTime(timezone=True))
+
+    __table_args__=(
+        ForeignKeyConstraint(
+            ["community_id", "channel_id"],
+            ["Channels.community_id", "Channels.channel_id"],
+            ondelete="CASCADE",
+        ),
+    )

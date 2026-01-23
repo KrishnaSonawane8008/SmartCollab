@@ -1,17 +1,25 @@
 from typing import Callable
 
-class ColorMeta(type):
 
+
+#used for priniting coloured text in the terminal
+#how to use:-
+#from utilities import Print
+#Print.red("some text")
+
+class ColorMeta(type):
     red: Callable[..., None]
     green: Callable[..., None]
     yellow: Callable[..., None]
     blue: Callable[..., None]
+    magenta: Callable[...,None]
 
     COLORS = {
         "red": "\033[31m",
         "green": "\033[32m",
         "yellow": "\033[33m",
         "blue": "\033[34m",
+        "magenta":"\033[35m",
         "reset": "\033[0m"
     }
 
@@ -25,7 +33,7 @@ class ColorMeta(type):
                 # exactly before the first argument
                 import sys
                 sys.stdout.write(color_code)
-                print(*args, **kwargs)
+                print(*args, **kwargs, flush=True)
                 sys.stdout.write(reset)
                 sys.stdout.flush()
             return wrapper
@@ -36,3 +44,4 @@ class ColorMeta(type):
 class Print(metaclass=ColorMeta):
     pass
 
+#the ai cooked with this one

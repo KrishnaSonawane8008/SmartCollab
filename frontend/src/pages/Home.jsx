@@ -1,8 +1,21 @@
 import { useNavigate } from "react-router-dom"
+import { useUserInfo } from "../hooks/user_hooks"
+import { useEffect } from "react"
 
 const Home = () => {
 
   const navigate=useNavigate()
+  const {getUserProfile}=useUserInfo()
+
+  useEffect(()=>{
+    getUserProfile().then((user_profile)=>{
+            navigate("/chats")
+        }).catch((e)=>{
+            console.log("Error getting user profile: ")
+            console.error(e)
+        })
+  }, [])
+
 
   return (
     <div className='h-full w-full flex flex-col bg-green-400 items-center relative'>

@@ -17,7 +17,7 @@ const ChatLayout = () => {
     const [ConvId, setConvId]=useState(null)
     const [UserProfile, setUserProfile]=useState(null)
     const [UserCommunities, setUserCommunities]=useState(null)
-
+    const [CommunityChannels, setCommunityChannels]=useState(null)
 
 
     useEffect(()=>{
@@ -56,6 +56,10 @@ const ChatLayout = () => {
         console.log("url parameters: ",url_params.conversationId)
         setConvId(url_params.conversationId)
     }, [url_params])
+
+    useEffect( ()=>{
+
+    } )
 
     // useEffect( ()=>{
     //     setUserProfile(UserProfile)

@@ -62,25 +62,25 @@ const CommunityTab = ({communityId, communityName, props}) => {
                 flex flex-col items-center justify-center 
                 tab-square
                 ${ActiveIndex==index?
-                    "bg-[var(--hover-color)] border-[0.15rem] border-[#ffffff] rounded-[0.7rem] transition-all duration-100":
-                    "bg-[var(--bg-color)] hover:bg-[var(--hover-color)] hover:border-[#ececec] hover:border-[0.15rem] rounded-[0.4rem]"}
+                    "bg-[var(--bg-color-dim)] border-[0.15rem] border-[#ffffff] rounded-[0.4rem] transition-all duration-100":
+                    "bg-[var(--bg-color-dim)] hover:bg-[var(--bg-color)]  rounded-[0.4rem]"}
                 group
                 `}
 
                 style={{
-                "--bg-color":tab_hsl_color,
-                "--hover-color": tab_hsl_dim
+                "--bg-color": tab_hsl_color,
+                "--bg-color-dim": tab_hsl_dim
                 }}
                 onClick={()=>{
-                    setActiveIndex(index)
+                    setActiveIndex(index);
                 }}
             >
                 <div
                     className={`leading-[1.069rem] 
                     text-[1.5rem]  font-[Inter] font-[1000] 
-                    min-h-0 min-w-0 text-[#1c1b1b]
+                    min-h-0 min-w-0 text-[#ececec]
 
-                    ${ActiveIndex==index?"text-[#ffffff] mt-[0.1rem]":"group-hover:text-[#ececec] mt-[0.2rem]"}
+                    ${ActiveIndex==index?"text-[#ffffff] mt-[0.1rem]":"group-hover:text-[#1c1b1b] mt-[0.2rem]"}
                     `}
                 >
                     {communityName[0]?.toUpperCase()}

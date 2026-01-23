@@ -22,9 +22,6 @@ def create_access_token(user_id, user_name):
 
 def refresh_token_check(request: Request, refresh_token: str=Cookie(None)):
 
-    if request.method=="OPTIONS":
-        return None
-
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -65,7 +62,7 @@ async def user_login(credentials: user_credentials, response: Response):
     response.set_cookie(
             key="refresh_token",
             value=f'{user.user_id}_{user.user_name}_{user.user_email}_{user.user_password}',
-            
+            max_age=60*60*24*30 #30 days
     )
 
     return {"AccessToken":f'{user.user_id}_{user.user_name}'}

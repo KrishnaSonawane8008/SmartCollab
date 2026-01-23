@@ -64,8 +64,6 @@ export async function FetchRequest(
                     if(!refresh_response.ok){
                         access_token=null
                         if(refresh_response.status==401){
-                            console.log(`Refresh request Failed: ${await response.text()}`)
-                            window.location.href="/login"
                             throw new Error(`Authorization Error: ${await response.text()}`);
                         }
                         throw new Error(`Access Token Refresh Error: ${await response.text()}`);
@@ -79,8 +77,7 @@ export async function FetchRequest(
                     console.log("retrying the same request")
                     return await FetchRequest( endpoint, options )
                 }catch(e){
-                    //redirect to login and rethrow error
-                    window.location.href="/login"
+                    //rethrow error
                     console.log(e)
                     throw e;
                 }
