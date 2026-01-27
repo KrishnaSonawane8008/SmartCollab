@@ -1,36 +1,51 @@
 from fastapi import HTTPException, status
-from database import session
+from database_models import Community_Members, Channel_Members
 from database_operations import get_table_by_name
+
+from sqlalchemy.orm import Session
+
 
 #checks if the userid trying to access this data is present in the "Com(:community_id)_Users" table
 #and is also present in the "Com(:community_id)_Channel(:channel_id)_Users" table
-def AuthorizeCommunityUser(uid: int, community_id: int, channel_id: int):
-    comm_users_table=get_table_by_name(f'Com{community_id}_Users')
+def isUserAuthorized(uid: int, community_id: int, session: Session, channel_id: int=None)->bool:
+    '''
+    isUserAuthorized(uid:int, community_id:int, db:Session )
+    ->used to verify whether the user is a member of the given community
 
-    db=session()
-    query = db.query().filter(comm_users_table.c.user_id == uid) 
-    comm_user_exists = db.query(query.exists()).scalar()
-
-    if not comm_user_exists:
-        db.commit()
-        db.close()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f'userid {uid} doesnt exist in the "Com{community_id}_Users"'
-        )
+    isUserAuthorized(uid:int, community_id:int, db:Session, channel_id:int )
+    ->used to verify whether the user is a member of a channle of a community
     
-    commChannel_users_table=get_table_by_name(f'Com{community_id}_Channel{channel_id}_ChannelUsers')
+    returns True on a succesful match in DB, False otherwise
+    '''
+    isAuthorized=False
+    if not community_id or not uid:
+        isAuthorized=False
+    else:
+        query = session.query().filter(Community_Members.user_id==uid, Community_Members.community_id==community_id) 
+        is_comm_member = session.query(query.exists()).scalar()
 
-    query = db.query().filter(commChannel_users_table.c.user_id == uid) 
-    channel_user_exists = db.query(query.exists()).scalar()
-
-    if not channel_user_exists:
-        db.commit()
-        db.close()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f'userid {uid} doesnt exist in the "Com{community_id}_Channel{channel_id}_ChannelUsers"'
-        )
+        if not is_comm_member:
+            isAuthorized=False
+        else:
+            isAuthorized=True
     
-    db.commit()
-    db.close()
+    if not channel_id: 
+        pass
+    else:
+        query = session.query().filter(Channel_Members.user_id==uid, Channel_Members.community_id==community_id, Channel_Members.channel_id==channel_id) 
+        is_channel_member = session.query(query.exists()).scalar()
+
+        if not is_channel_member:
+            isAuthorized=False
+        else:
+            isAuthorized=True
+
+    
+    return isAuthorized
+
+        
+    
+
+    
+    
+    

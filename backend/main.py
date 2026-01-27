@@ -34,11 +34,13 @@ app.add_middleware(
 
 from auth.endpoints import router as auth_router
 from users.endpoints import router as users_router
-
+from communities.endpoints import router as communities_router
+from channels.endpoints import router as channels_router
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(users_router, prefix="/users")
-
+app.include_router(communities_router, prefix="/communities")
+app.include_router(channels_router, prefix="/channels")
 
 
 def init_db():
@@ -61,7 +63,7 @@ def init_db():
 
 
 @app.get("/populate_db")
-async def initialize_db():
+def initialize_db():
     if(is_database_empty(engine)):
         print("database is empty, filling with random data")
         init_db()

@@ -1,5 +1,6 @@
-import { useEffect, useState, useLayoutEffect } from "react"
-
+import { useEffect, useState, useContext } from "react"
+import { useParams, useNavigate } from "react-router-dom";
+import { ChatLayout_Context } from "../../../../contexts/ChatLayout-context-provider";
 
 function hslToRgb(h, s, l) {
     // Normalize h, s, l to 0-1 range
@@ -34,16 +35,22 @@ function hslToRgb(h, s, l) {
 
 
 
-const CommunityTab = ({communityId, communityName, props}) => {
+const CommunityTab = ({communityId, communityName}) => {
 
-    const {index, ActiveIndex, setActiveIndex}=props
+
     const [tab_hsl_color, setTabColor]=useState(null)
     const [tab_hsl_dim, setTabColorDim]=useState(null)
+
+    const {CommunityChannelMap}=useContext(ChatLayout_Context);
+
+    const url_params=useParams()
+    const navigate=useNavigate()
     useEffect( ()=>{
         const hue=(Math.floor(Math.random()*360))%360
         setTabColor(`hsl(${hue},100%,65%)`)
-        setTabColorDim(`hsl(${hue},100%,30%)`)
+        setTabColorDim(`hsl(${hue},100%,35%)`)
     }, [] )
+
 
     return (
     
@@ -51,7 +58,8 @@ const CommunityTab = ({communityId, communityName, props}) => {
                 w-full h-[45px] max-w-[100px]
                 flex items-center justify-center
                 has-[.tab-square:hover]:pl-[4px] has-[.tab-square:hover]:pr-[7px]
-                ${ActiveIndex==index?"pl-[4px] pr-[7px] bg-[#666666]":"pl-[6px] pr-[9px]"}
+                ${url_params.communityId==communityId?
+                    "pl-[4px] pr-[7px] bg-[#8c8c8c]":"pl-[7px] pr-[10px]"}
                 transition-all duration-100
             `}
         >
@@ -61,10 +69,11 @@ const CommunityTab = ({communityId, communityName, props}) => {
                 className={` w-full aspect-square select-none cursor-pointer
                 flex flex-col items-center justify-center 
                 tab-square
-                ${ActiveIndex==index?
-                    "bg-[var(--bg-color-dim)] border-[0.15rem] border-[#ffffff] rounded-[0.4rem] transition-all duration-100":
-                    "bg-[var(--bg-color-dim)] hover:bg-[var(--bg-color)]  rounded-[0.4rem]"}
                 group
+                ${url_params.communityId==communityId?
+                    "bg-[var(--bg-color-dim)] border-[0.15rem] border-[#ffffff] rounded-[0.4rem] transition-all duration-100"
+                    :
+                    "bg-[var(--bg-color)] hover:bg-[var(--bg-color-dim)]  rounded-[0.4rem]"}
                 `}
 
                 style={{
@@ -72,15 +81,20 @@ const CommunityTab = ({communityId, communityName, props}) => {
                 "--bg-color-dim": tab_hsl_dim
                 }}
                 onClick={()=>{
-                    setActiveIndex(index);
+                    if(url_params.communityId==communityId) return;
+                    const channel_id=CommunityChannelMap[communityId]
+                    navigate(`/chats/${communityId}/${channel_id?channel_id:""}`)
                 }}
             >
                 <div
-                    className={`leading-[1.069rem] 
-                    text-[1.5rem]  font-[Inter] font-[1000] 
-                    min-h-0 min-w-0 text-[#ececec]
+                    className={` 
+                    font-[Inter] font-[1000] 
+                    min-h-0 min-w-0
 
-                    ${ActiveIndex==index?"text-[#ffffff] mt-[0.1rem]":"group-hover:text-[#1c1b1b] mt-[0.2rem]"}
+                    ${url_params.communityId==communityId?
+                        "text-[#ffffff] mt-[0.1rem] leading-[1.069rem] text-[1.6rem]"
+                        :
+                        "group-hover:text-white text-[#1c1b1b] mt-[0.1rem] leading-[1.069rem] text-[1.5rem]"}
                     `}
                 >
                     {communityName[0]?.toUpperCase()}

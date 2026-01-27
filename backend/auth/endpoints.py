@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Response, HTTPException, Cookie, status, Depends, Request
 
 from database import session
+from sqlalchemy.orm import Session
+from DB_Manipulation.dependencies import get_db
 from datetime import timedelta, datetime, timezone
 from RequestModels import user_credentials
 
@@ -20,7 +22,7 @@ def create_access_token(user_id, user_name):
     return {"new_access_token": token, "new_expiry":expires_at }
 
 
-def refresh_token_check(request: Request, refresh_token: str=Cookie(None)):
+def refresh_token_check(refresh_token: str=Cookie(None)):
 
     if not refresh_token:
         raise HTTPException(
@@ -32,10 +34,9 @@ def refresh_token_check(request: Request, refresh_token: str=Cookie(None)):
 
 
 @router.post("/login")
-async def user_login(credentials: user_credentials, response: Response):
+def user_login(credentials: user_credentials, response: Response, db:Session = Depends(get_db)):
     print("===================================================")
     print(f'recieved credentials: {credentials.username}, {credentials.email}, {credentials.password}')
-    db=session()
 
     #check if user already in DB
     user = get_user_with_email(session=db, email=credentials.email)
@@ -48,7 +49,7 @@ async def user_login(credentials: user_credentials, response: Response):
 
         print("refresh_token stored in cookie")
 
-        db.commit()
+
         print(f'user {credentials.username} added to db')
     else:
         if user.user_name!=credentials.username or user.user_password!=credentials.password:
@@ -57,7 +58,6 @@ async def user_login(credentials: user_credentials, response: Response):
                 detail="wrong username or password"
             )
 
-    db.close()
 
     response.set_cookie(
             key="refresh_token",
@@ -69,25 +69,18 @@ async def user_login(credentials: user_credentials, response: Response):
 
 
 
-@router.options("/refresh")
-async def refresh_options():
-    return {}
-
-
 @router.post("/refresh")
-async def get_refresh_token(response: Response, refresh_token: str=Depends(refresh_token_check)):
+def get_refresh_token(refresh_token: str=Depends(refresh_token_check), db:Session=Depends(get_db)):
 
     token_info=refresh_token.split("_")
 
     new_auth_info=create_access_token(user_id=token_info[0], user_name=token_info[1])
     try:
-        db=session()
-        update_user_auth_info(session=db, 
+        update_user_auth_info(session=db,
                               uid=token_info[0],
                               new_access_token=new_auth_info["new_access_token"], 
                               new_expiry_time=new_auth_info["new_expiry"])
-        db.commit()
-        db.close()
+
     except Exception as e:
         Print.red("ERROR WHILE UPDATING USER INFO: ")
         Print.yellow(f'   {e}')
@@ -104,6 +97,11 @@ async def get_refresh_token(response: Response, refresh_token: str=Depends(refre
 @router.get("/cors_test")
 def cors_test(access_token: str=Depends(token_verification)):
     return {"status": "ok"}
+
+@router.post("/auto_login")
+def auto_login_user(refresh_token: str=Depends(refresh_token_check)):
+    if refresh_token:
+        return {"status": "ok"}
 
 
 

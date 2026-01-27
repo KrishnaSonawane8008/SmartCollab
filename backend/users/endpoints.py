@@ -2,7 +2,10 @@ from fastapi import APIRouter, Response, Depends
 from RequestModels import user_credentials
 from auth.dependencies import token_verification
 from DB_Manipulation.user_operations import get_user_communities, get_user_with_uid
+from DB_Manipulation.dependencies import get_db
 from database import session
+from sqlalchemy.orm import Session
+from utilities.colour_print import Print
 
 router = APIRouter()
 
@@ -20,13 +23,12 @@ def cookie_test(credentials: user_credentials, response: Response, access_token:
 
 
 @router.get("/profile")
-def get_user_profile(token: str=Depends(token_verification)):
+def get_user_profile(token: str=Depends(token_verification), db:Session=Depends(get_db)):
     uid=get_uid(access_token=token)
-
-    db=session()
     user_info=get_user_with_uid(session=db, uid=uid)
-    db.commit()
-    db.close()
+    
+    Print.red("=================================")
+    # Print.red(f"UserInfo: {user_info}")
 
     return {"UserInfo":{"username":user_info.user_name, "email":user_info.user_email}}
 
@@ -34,13 +36,10 @@ def get_user_profile(token: str=Depends(token_verification)):
 
 
 @router.get("/communities")
-def user_communities(token: str=Depends(token_verification)):
+def user_communities(token: str=Depends(token_verification), db:Session=Depends(get_db)):
     uid=get_uid(access_token=token)
 
-    db=session()
     user_comms=get_user_communities(session=db, uid=uid)
-    db.commit()
-    db.close()
     # print(f'================{user_comms}================')
 
     return {"UserCommunities":user_comms}

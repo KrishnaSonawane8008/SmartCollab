@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react"
-import { get_user, login_user, test, get_communities, cors_test, get_user_profile } from "../services/user_services"
+import { login_user, test, get_communities, cors_test, get_user_profile, autologin } from "../services/user_services"
 
 
-export function useUserOperations(){
-   
-    useEffect( ()=>{
-        get_user()
-    }, [] )
 
-    return "hi" 
-}
 
 export function useAuth(){
     
@@ -37,7 +30,10 @@ export function useAuth(){
             setLoginLoading(false)
         }
 
+    }
 
+    const AutoLogin_user= async ()=>{
+        return await autologin();
     }
 
     const Login_test=()=>{
@@ -46,6 +42,7 @@ export function useAuth(){
 
     return {
         handleLogin,
+        AutoLogin_user,
         Login_test,
         login_loading
     }

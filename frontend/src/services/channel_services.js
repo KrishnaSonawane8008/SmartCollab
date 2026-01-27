@@ -2,15 +2,13 @@ import { FetchRequest } from "../api/client";
 
 function sleep(ms) {
     console.log("sleeping")
-
-    return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function get_community_channels(community_id){
-     await sleep(3000)
-     console.log("sent request")
+export async function get_channel_messages(communityId, channelId) {
+
     return await FetchRequest(
-            `/communities/${community_id}/channels`,
+            `/channels/${communityId}/${channelId}`,
             {
                 method: "GET",
                 credentials: "include",

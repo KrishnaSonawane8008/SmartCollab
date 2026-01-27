@@ -1,11 +1,13 @@
-from fastapi import HTTPException, Header, status
+from fastapi import HTTPException, Header, status, Depends
 from database import session
+from sqlalchemy.orm import Session
 from DB_Manipulation.user_operations import get_user_auth_info
 from datetime import datetime, timezone
 from utilities.colour_print import Print
+from DB_Manipulation.dependencies import get_db
 
 
-def token_verification( Authorization: str = Header(None) ):
+def token_verification( Authorization: str = Header(None), db: Session = Depends(get_db) ):
     #check if the request has the Authorization header, the Authorization header contains the access token
     if not Authorization:
         Print.red("AUTHORIZATION FIELD NOT PRESENT IN HEADER")
@@ -27,14 +29,12 @@ def token_verification( Authorization: str = Header(None) ):
     
     uid, _, uname=token.partition("_")
 
-    db=session()
     #check if the userid(got from the access token) is present in the "Users" table
     user_auth_info=get_user_auth_info(session=db, userid=uid)
-    db.commit()
-    db.close()
+
 
     #check if the value in the access_token column from "Users" table is not null 
-    if not user_auth_info.access_token:
+    if not user_auth_info.value:
         Print.red("NO ACCESS TOKEN IN DB")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -5,25 +5,23 @@ from sqlalchemy import inspect, select, text, insert, update, exists
 from models import User, Access_Token, Community_Member, Community
 from database_models import Users, Access_Tokens, Community_Members, Communities
 from datetime import datetime, timedelta, timezone
-
+from utilities.colour_print import Print
 #returns None if user doesnt exist in db, otherwise returns the user row corresponding to credentials
 def get_user_with_email(session: Session, email: str)->User | None:
-    users_table=get_table_by_name("Users")
-
     #bascially -
     # SELECT * FROM "USERS" 
     # WHERE 
     # user_email=:credentials.email;
-    user: list[User]=session.execute(
+    users: list[User]=session.execute(
                                 select(Users).where(
                                         Users.user_email==email,
                                         )
-                            ).mappings().all()
+                            ).scalars().all()
     
-    if len(user)==0:
+    if len(users)==0:
         return None
 
-    return user[0]
+    return users[0]
 
 
 #same as get_user_with_credentials, but uses the user_id to retrieve user info
@@ -33,8 +31,8 @@ def get_user_with_uid(session: Session, uid: int)->User | None:
                                 select(Users).where(
                                         Users.user_id==uid
                                         )
-                            ).mappings().all()
-    
+                            ).scalars().all()
+
     if len(user)==0:
         return None
 
@@ -72,7 +70,7 @@ def update_user_auth_info(session: Session, uid: int, new_access_token: str, new
 
     if(user_exists):
         session.execute(
-            update(Access_Token).where(Users.user_id==uid).values(value=new_access_token, expires_at=new_expiry_time)
+            update(Access_Tokens).where(Access_Tokens.user_id==uid).values(value=new_access_token, expires_at=new_expiry_time)
         )
     else:
         raise Exception(f'user_id {uid} doesnt exist in database/wrong uid provided')
@@ -88,7 +86,7 @@ def add_as_new_user(session: Session, credentials: user_credentials)->User:
     last_user: list[dict]=session.execute( 
                     select(Users).order_by(Users.user_id.desc())
 
-                    ).mappings().all()[0]
+                    ).scalars().all()[0]
     new_uid=last_user['user_id']+1
     new_user=User(
         user_id=new_uid,
@@ -122,7 +120,7 @@ def get_user_communities(session: Session, uid:int)->list[Community] | None:
     #               "Community_Members".user_id=uid
     #             )
 
-    user_comms: list[Community]=session.execute(query).mappings().all()
+    user_comms: list[Community]=session.execute(query).scalars().all()
 
     if(len(user_comms)==0):
         return None

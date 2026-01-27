@@ -1,13 +1,6 @@
 import { FetchRequest } from "../api/client";
 
 
-export function get_user(){
-    FetchRequest(
-        "/get_user",
-        {}
-    )
-}
-
 export async function login_user({username, email, password}){
     
     return await FetchRequest(
@@ -21,6 +14,20 @@ export async function login_user({username, email, password}){
         }
     )
     
+}
+
+
+export async function autologin(){
+    return await FetchRequest(
+        "/auth/auto_login",
+        {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        }
+    )
 }
 
 

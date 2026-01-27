@@ -1,13 +1,11 @@
-import { useState } from "react"
+import { useContext } from "react"
 import UserProfile from "./GroupBar Components/UserProfile"
 import CommunityTab from "./GroupBar Components/CommunityTab"
 import ScrollBar from "../../common components/ScrollBar"
+import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provider"
 
 const GroupBar = ({username,email,communities}) => {
   // console.log("type of communities: ",communities)
-
-  const [ActiveIndex, setActiveIndex]=useState(false)
-  
 
   return (
     <div className='bg-[#454545] w-full max-w-[3rem] h-full flex flex-col'>
@@ -27,17 +25,13 @@ const GroupBar = ({username,email,communities}) => {
                     <CommunityTab 
                       communityId={community.community_id}
                       communityName={community.community_name}
-                      props={ {index,ActiveIndex, setActiveIndex}  }
                     />
                   </div>
                 )
 
           } )
       }
-        
-
-        
-
+      
       </ScrollBar>
       
 

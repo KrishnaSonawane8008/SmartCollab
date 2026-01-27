@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom"
-import { useUserOperations, useAuth } from "../hooks/user_hooks"
+import { useAuth } from "../hooks/user_hooks"
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 
 const Login = () => {
-  // const {}=useUserOperations();
+  
   const navigate=useNavigate()
   const {
+        AutoLogin_user,
         handleLogin,
-        Login_test,
         login_loading,
     }=useAuth()
 
@@ -49,6 +49,15 @@ const Login = () => {
 
 
   useEffect( ()=>{
+
+    //redirect user if refresh token exists
+    AutoLogin_user().then(
+      ()=>{
+        navigate("/chats")
+      }
+    ).catch((e)=>{
+    })
+
     if(isAuthenticated){
       console.log("User Authenticate, navigating to chats")
       navigate("/chats")

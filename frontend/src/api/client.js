@@ -1,10 +1,27 @@
+import { ApiError } from "./ApiError"
 
 const BASE_URL=import.meta.env.VITE_API_BASE_URL
 
 
-let access_token=null
+async function throw_api_error(response){
+    let errorData=null;
+    try{
+        errorData=await response.json();
+    }catch{
+        errorData=await response.text();
+    }
 
-async function attach_AccessToken(request_options){
+    throw new ApiError({
+            message: errorData?.detail || "Request Failed",
+            status: response.status,
+            data: errorData
+        });
+}
+
+
+
+
+function attach_AccessToken(request_options){
 
     if( !request_options.credentials ){
         request_options.credentials="include"
@@ -25,83 +42,139 @@ function sleep(ms) {
 }
 
 
-export async function FetchRequest( 
-        endpoint,
-        options,
-){
-    try{
-        const some_url = `${BASE_URL}${endpoint}`;
+async function NullAccessTokenCheck(endpoint) {
 
-        
-        attach_AccessToken(options)
-        // console.log(`sending request to ${BASE_URL}${endpoint} with options:`,"\n", options)
-
-        const response = await fetch(some_url, {...options});
-
-        if (!response.ok) {
-
-            if(response.status==401){
-
-                if(endpoint=="/auth/login"){
-                    console.log("Error while login")
-                    throw new Error(`Login Error: ${await response.text()}`);
-                }
-
-
-                console.log(`response status 401, sending request to ${BASE_URL}/auth/refresh`)
-
-                try{
-                    const refresh_response= await fetch(`${BASE_URL}/auth/refresh`, 
-                                                            {
-                                                                method: "POST",
-                                                                credentials: "include",
-                                                                headers: {
-                                                                    "Content-Type": "application/json",
-                                                                }
-                                                            } 
-                                                        );
-
-                    if(!refresh_response.ok){
-                        access_token=null
-                        if(refresh_response.status==401){
-                            throw new Error(`Authorization Error: ${await response.text()}`);
-                        }
-                        throw new Error(`Access Token Refresh Error: ${await response.text()}`);
-                        
-                    }
-
-                    const refresh_result = await refresh_response.json();
-                    access_token=refresh_result.new_AccessToken;
-                    console.log("new access token set")
-                    //retry the previous request
-                    console.log("retrying the same request")
-                    return await FetchRequest( endpoint, options )
-                }catch(e){
-                    //rethrow error
-                    console.log(e)
-                    throw e;
-                }
-
-
-            }
-
-            throw new Error(`Response status: ${response.status}`);
-        }
-
-        
-
-        const result = await response.json();
-
-        if(endpoint=="/auth/login" && result.AccessToken){
-            console.log("manual login, setting up access token")
-            access_token=result.AccessToken
-        }
-
-        // console.log("Server Response:","\n",JSON.stringify(result, null, 2))
-        return result
-    }catch(e){
-        //rethrow error
-        throw e
+    if(endpoint=="/auth/login"){
+        return
     }
 
+    if(!access_token){
+        try{
+            const refresh_result=await SendRefreshRequest()
+            access_token=refresh_result.new_AccessToken
+        }catch(e){
+            access_token=null
+            if(endpoint=="/auth/auto_login"){
+                console.log("Error While Auto Login")
+                throw e
+            }else{
+                window.location.href="/login"
+                throw e
+            }
+        }
+    }
 }
+
+async function SendRefreshRequest(){
+
+    if(!refreshPromise){
+        refreshPromise=(async ()=>{
+            console.log(`${!access_token?"Access Token null":"Access Token Exipred/Invalid"}, sending refresh request`)
+            const refresh_response= await fetch(
+                                                `${BASE_URL}/auth/refresh`, 
+                                                {
+                                                    method: "POST", credentials: "include",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                    }
+                                                } 
+                                               );
+
+            if(!refresh_response.ok){
+                await throw_api_error(refresh_response)
+            }
+
+            const refresh_result = await refresh_response.json();
+            return refresh_result
+            
+        })().finally(()=>{
+            refreshPromise=null
+        })
+    
+    }
+
+    return refreshPromise
+}
+
+
+
+
+async function SendFetchRequest(
+    endpoint,
+    options,
+) {
+    const some_url = `${BASE_URL}${endpoint}`;
+
+    attach_AccessToken(options)
+    // console.log(`sending request to ${BASE_URL}${endpoint} with options:`,"\n", options)
+
+    const response = await fetch(some_url, {...options});
+
+    if (!response.ok) {
+        await throw_api_error(response)
+    }
+
+    const result = await response.json();
+
+    // console.log("Server Response:","\n",JSON.stringify(result, null, 2))
+    return result
+    
+}
+
+
+
+let access_token=null
+let refreshPromise=null
+
+
+export async function FetchRequest(
+    endpoint,
+    options,
+) {
+
+    if(refreshPromise ){
+        await refreshPromise
+    }
+
+    await NullAccessTokenCheck(endpoint)
+
+    try{
+
+        const result=await SendFetchRequest(endpoint, options)
+        return result
+    }catch(e){
+        if(e.status==401){
+
+            if(endpoint=="/auth/login"){
+                console.log("Error while login")
+                throw e
+            }
+
+            try{
+                
+                const refresh_result=await SendRefreshRequest()
+                access_token=refresh_result.new_AccessToken
+
+                const retry_result=await SendFetchRequest(endpoint, options)
+                return retry_result
+
+            }catch(e){
+                access_token=null
+                if(endpoint=="/auth/auto_login"){
+                    console.log("Error While Auto Login")
+                    throw e
+                }else{
+                    console.log("...Redirecting User")
+                    window.location.href="/login"
+                    throw e
+                }
+            }
+        }
+
+        throw e
+    }
+}
+
+
+
+

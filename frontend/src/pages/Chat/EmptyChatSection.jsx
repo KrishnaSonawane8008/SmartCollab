@@ -1,4 +1,9 @@
-import React from 'react'
+import { get_community_channels } from "../../services/community_services"
+
+const CommunityChannels_Loader= ({params})=>{
+  const community_channels= get_community_channels(params.communityId)
+  return {community_channels}
+}
 
 const EmptyChatSection = () => {
   return (
@@ -15,4 +20,4 @@ const EmptyChatSection = () => {
   )
 }
 
-export default EmptyChatSection
+export { EmptyChatSection, CommunityChannels_Loader}
