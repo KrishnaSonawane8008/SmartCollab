@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, Suspense } from "react";
-import { Outlet, useParams, useNavigate, useLoaderData, Await, useMatches, useRouteLoaderData } from "react-router-dom"
+import { Outlet, useParams, useNavigate } from "react-router-dom"
 import {EmptyChatSection} from "./EmptyChatSection";
 
 import GroupBar from "./ChatLayout Components/GroupBar";
@@ -7,29 +7,11 @@ import OptionsBar from "./ChatLayout Components/OptionsBar";
 import SearchBar from "./ChatLayout Components/SearchBar";
 import ChannelsPanel from "./ChatLayout Components/ChannelsPanel";
 
+import { useAsyncError } from "../../hooks/ErrorHooks";
 
 import { useUserInfo } from "../../hooks/user_hooks";
-import { useCommunityInfo } from "../../hooks/community_hooks";
-import { useChannels } from "../../hooks/channel_hooks";
-
-import { get_user_profile, get_communities } from "../../services/user_services";
-import { get_community_channels } from "../../services/community_services";
 
 
-const ChatLayout_Loader=async ({params})=>{
-    // const {getUserProfile, getCommunities}=useUserInfo()
-    // const {getCommunityChannels}=useCommunityInfo()
-
-    const userInfo=await get_user_profile()
-    const userCommunities=await get_communities()
-
-    if(!params.communityId){
-        return {userInfo, userCommunities, community_channels:null}
-    }
-
-    
-    return {userInfo, userCommunities}
-}
 
 
 
@@ -37,52 +19,46 @@ const ChatLayout_Loader=async ({params})=>{
 const ChatLayout = () => {
 
     const {getUserProfile, getCommunities}=useUserInfo()
-    const {getCommunityChannels}=useCommunityInfo()
-    const {loading_messages, getMessages}=useChannels()
+
+
+    const throwError=useAsyncError()
 
     const {communityId, channelId}=useParams();
 
     const [UserProfile, setUserProfile]=useState(null)
     const [UserCommunities, setUserCommunities]=useState(null)
 
-    const [Channels, setChannels]=useState(null)
-
-    const {userInfo, userCommunities}=useLoaderData()
-
-    const matches=useMatches()
-
-    const community_channels_data=useRouteLoaderData("communityChannels")
-
+ 
 
     useEffect(()=>{
 
-        // getUserProfile().then((user_profile)=>{
-        //     const userInfo=user_profile.UserInfo
-        //     console.log("user profile: ",userInfo.username)
-        //     setUserProfile(user_profile.UserInfo)
-        // }).catch((e)=>{
-        //     console.log("Error getting user profile: ")
-        //     console.error(e)
-        // })
+        getUserProfile().then((user_profile)=>{
+            const userInfo=user_profile.UserInfo
+            console.log("user profile: ",userInfo.username)
+            setUserProfile(user_profile.UserInfo)
+        }).catch((e)=>{
+            console.log("Error getting user profile: ")
+            throwError(e)
+        })
 
-        if(userInfo){
-            setUserProfile(userInfo.UserInfo)
-        }
+        // if(userInfo){
+        //     setUserProfile(userInfo.UserInfo)
+        // }
         
-        if(userCommunities){
-            setUserCommunities(userCommunities.UserCommunities)
-        }
+        // if(userCommunities){
+        //     setUserCommunities(userCommunities.UserCommunities)
+        // }
 
 
-        // getCommunities().then(
-        //     (communities)=>{
-        //         console.log("fetched communities: ",communities.UserCommunities)
-        //         setUserCommunities(communities.UserCommunities)
-        //     }
-        // ).catch((e)=>{
-        //     console.log("Error getting communities: ")
-        //     console.error(e)
-        // })
+        getCommunities().then(
+            (communities)=>{
+                console.log("fetched communities: ",communities.UserCommunities)
+                setUserCommunities(communities.UserCommunities)
+            }
+        ).catch((e)=>{
+            console.log("Error getting communities: ")
+            console.error(e)
+        })
 
 
         if(!communityId) return;
@@ -93,8 +69,7 @@ const ChatLayout = () => {
         //     setChannels(channels.Channels)
         // }).catch((e)=>{
         //     console.error(`Error while getting Channels for community ${communityId}: \n ${e}`)
-
-        //     throw new Error("user is not authorized to access this channel")
+        //     // showBoundary(e)
         // })
 
         // setCurrentCommunity(communityId)
@@ -112,47 +87,6 @@ const ChatLayout = () => {
 
     }, [])
 
-
-
-
-
-
-    // useEffect(()=>{
-
-    //     if(!communityId) return
-
-    //     // console.log("url parameters: ",communityId,", ",channelId)
-    //     getCommunityChannels(communityId).then((channels)=>{
-    //         // console.log("Channels: ",channels)
-    //         console.log("getting channels in useEffect")
-    //         setChannels(channels.Channels)
-    //     }).catch((e)=>{
-    //         console.error(`Error while getting Channels for community ${communityId}: \n ${e}`)
-    //     })
-
-
-    // }, [communityId])
-
-
-    // useEffect( ()=>{
-
-    //     if(!channelId || !communityId) return
-
-    //     async function loadMessages() {
-            
-    //         try{
-    //             const messages=await getMessages(communityId,channelId)
-    //             console.log(messages)
-    //         }catch(e){
-    //             console.log("==========================================")
-    //             console.log(e.status)
-    //             console.log("==========================================")
-    //         }
-    //     }
-
-    //     loadMessages();
-        
-    // }, [communityId ,channelId] )
 
 
 
@@ -178,25 +112,8 @@ const ChatLayout = () => {
                 <div className="flex flex-col min-w-0 w-full h-full">
                     <OptionsBar/>
                     <SearchBar/>
-                    <Suspense fallback={
-                        <div className="w-full h-full bg-amber-50">
-                            ...Loading Channels
-                        </div>
-                    }>
+                    <ChannelsPanel />
 
-                        <Await resolve={community_channels_data.community_channels}>
-                            {(channels)=>{
-                                console.log("setting channel values: ",channels.Channels)
-                                return(
-                                    <ChannelsPanel
-                                        channels={channels.Channels}
-                                    />
-                                )
-                            }
-                            }
-                        </Await>
-                        
-                    </Suspense>
                     
                 </div>
 
@@ -204,13 +121,19 @@ const ChatLayout = () => {
 
         </div>
 
-        <div className="w-full h-full">
-            <Outlet />
-        </div>
+        {channelId ?(
+            <div className="w-full h-full">
+                <Outlet />
+            </div>
+        ):(
+            <EmptyChatSection/>
+        )
+        
+        }
         
       
     </div>
   )
 }
 
-export {ChatLayout, ChatLayout_Loader}
+export {ChatLayout}

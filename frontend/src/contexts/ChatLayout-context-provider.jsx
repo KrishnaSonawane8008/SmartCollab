@@ -10,22 +10,15 @@ export const ChatLayout_Context_Provider = ({children}) => {
 
     const {communityId, channelId}=useParams()
 
-    useEffect( ()=>{
-        if(!communityId || !channelId) return;
 
-        setCommunityChannelMap( (prev)=>{
-            return {...prev, [communityId]:channelId }
-        } )
-    }, [] )
+    useEffect(()=>{ 
 
-    useEffect( ()=>{
-        if(!communityId) return
+    if(!channelId || !communityId) return
+    setCommunityChannelMap( (prev)=>{
+        return {...prev, [communityId]:channelId }
+    } )
 
-        setCommunityChannelMap( (prev)=>{
-            return {...prev, [communityId]:channelId }
-        } )
-
-    }, [channelId] )
+  }, [communityId, channelId])
 
     return (
         <ChatLayout_Context.Provider value={{
@@ -33,7 +26,8 @@ export const ChatLayout_Context_Provider = ({children}) => {
                                         setCurrentCommunity,
                                         CurrentChannel, 
                                         setCurrentChannel,
-                                        CommunityChannelMap
+                                        CommunityChannelMap,
+                                        setCommunityChannelMap
                                         }}>
             {children}
         </ChatLayout_Context.Provider>

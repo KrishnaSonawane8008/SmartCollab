@@ -7,8 +7,8 @@ function sleep(ms) {
 }
 
 export async function get_community_channels(community_id){
-     await sleep(3000)
-     console.log("sent request")
+    // await sleep(3000)
+    // console.log("sent request")
     return await FetchRequest(
             `/communities/${community_id}/channels`,
             {

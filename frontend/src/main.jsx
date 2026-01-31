@@ -1,14 +1,19 @@
-import { StrictMode } from 'react'
+
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
 import Home from './pages/Home'
 import Login from './pages/Login'
-import {ChatLayout, ChatLayout_Loader} from './pages/Chat/ChatLayout'
-import { EmptyChatSection, CommunityChannels_Loader} from './pages/Chat/EmptyChatSection'
+import {ChatLayout} from './pages/Chat/ChatLayout'
 import ChatMessagesSection from './pages/Chat/ChatMessagesSection'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ChatLayout_Context_Provider } from './contexts/ChatLayout-context-provider'
+import ErrorFallback from './pages/ErrorFallback'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+
+
+
+const query_client=new QueryClient()
+
 
 const router = createBrowserRouter([
   {
@@ -20,25 +25,23 @@ const router = createBrowserRouter([
     element: <Login />
   },
   {
-    path:"/chats",
+    path:"/chats/:communityId?",
     element:
+    <QueryClientProvider client={query_client}>
       <ChatLayout_Context_Provider>
         <ChatLayout />
       </ChatLayout_Context_Provider>
+    </QueryClientProvider>
+
     ,
-    loader: ChatLayout_Loader,
+    errorElement:<ErrorFallback/>,
     children: [
-      {
-        path: ":communityId",
-        id:"communityChannels",
-        element: <EmptyChatSection />,
-        loader:CommunityChannels_Loader,
-      },
       {
         path: ":communityId/:channelId",
         element: <ChatMessagesSection />,
       },
     ]
+    ,
 
   }
 ])
