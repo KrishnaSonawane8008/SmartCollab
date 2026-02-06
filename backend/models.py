@@ -58,7 +58,14 @@ class Channel_Member(BaseModel):
 
 
 #base for each entry inside the Messages table
-class Message(BaseModel):
+class MessageCreate(BaseModel):
+    sender_id:int
+    community_id:int
+    channel_id:int
+    message:str
+    sent_at:datetime
+
+class MessageRead(BaseModel):
     message_id:int
     sender_id:int
     community_id:int

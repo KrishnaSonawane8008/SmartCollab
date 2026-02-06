@@ -1,10 +1,25 @@
+import { useRef,useEffect,forwardRef,useImperativeHandle } from "react"
 import SimpleBar from "simplebar-react"
 import "simplebar-react/dist/simplebar.min.css"
 
-const ScrollBar = ({children, barWidth}) => {
+const ScrollBar = forwardRef((props, ref) => {
+  const scrollbarRef=useRef(null)
+  const {children, barWidth, scroll_to_bottom=false}=props
+
+  const scrollToBottom = () => {
+    if(!scrollbarRef.current) return
+    const scrollEl = scrollbarRef.current.getScrollElement();
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+  }
+
+  useImperativeHandle(ref, () => ({
+    scrollToBottom
+  }))
+
   // The Parent of the ScrollBar compoenent needs to have diaplay:flex
   return (
     <SimpleBar 
+      ref={scrollbarRef}
       className={`
         flex-1 min-h-0
         sb-scope
@@ -17,6 +32,6 @@ const ScrollBar = ({children, barWidth}) => {
         {children}
     </SimpleBar>
   )
-}
+})
 
 export default ScrollBar

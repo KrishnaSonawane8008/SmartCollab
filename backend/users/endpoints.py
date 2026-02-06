@@ -27,7 +27,6 @@ def get_user_profile(token: str=Depends(token_verification), db:Session=Depends(
     uid=get_uid(access_token=token)
     user_info=get_user_with_uid(session=db, uid=uid)
     
-    Print.red("=================================")
     # Print.red(f"UserInfo: {user_info}")
 
     return {"UserInfo":{"username":user_info.user_name, "email":user_info.user_email}}

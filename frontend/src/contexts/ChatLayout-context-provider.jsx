@@ -9,8 +9,7 @@ export const ChatLayout_Context_Provider = ({children}) => {
     const [CommunityChannelMap, setCommunityChannelMap]=useState({})
 
     const {communityId, channelId}=useParams()
-
-
+    
     useEffect(()=>{ 
 
     if(!channelId || !communityId) return

@@ -1,45 +1,58 @@
 from typing import Callable
+import logging
 
 
+# ---------------- Logger setup ---------------- #
 
-#used for priniting coloured text in the terminal
-#how to use:-
-#from utilities import Print
-#Print.red("some text")
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        "red": "\033[31m",
+        "green": "\033[32m",
+        "yellow": "\033[33m",
+        "blue": "\033[34m",
+        "magenta": "\033[35m",
+    }
+    RESET = "\033[0m"
+
+    def format(self, record: logging.LogRecord) -> str:
+        color = self.COLORS.get(getattr(record, "color", ""), "")
+        message = super().format(record)
+        return f"{color}{message}{self.RESET}"
+
+
+_logger = logging.getLogger("print_util")
+
+if not _logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColorFormatter("%(message)s"))
+    _logger.addHandler(handler)
+
+_logger.setLevel(logging.INFO)
+_logger.propagate = False   # 🔑 prevents uvicorn double logging
+
+
+# ---------------- Print utility ---------------- #
 
 class ColorMeta(type):
     red: Callable[..., None]
     green: Callable[..., None]
     yellow: Callable[..., None]
     blue: Callable[..., None]
-    magenta: Callable[...,None]
+    magenta: Callable[..., None]
 
-    COLORS = {
-        "red": "\033[31m",
-        "green": "\033[32m",
-        "yellow": "\033[33m",
-        "blue": "\033[34m",
-        "magenta":"\033[35m",
-        "reset": "\033[0m"
-    }
+    COLORS = {"red", "green", "yellow", "blue", "magenta"}
 
     def __getattr__(cls, name):
         if name in cls.COLORS:
-            color_code = cls.COLORS[name]
-            reset = cls.COLORS["reset"]
-            
+
             def wrapper(*args, **kwargs):
-                # We use sys.stdout.write to ensure the color starts 
-                # exactly before the first argument
-                import sys
-                sys.stdout.write(color_code)
-                print(*args, **kwargs, flush=True)
-                sys.stdout.write(reset)
-                sys.stdout.flush()
+                msg = " ".join(str(a) for a in args)
+                _logger.info(msg, extra={"color": name})
+
             return wrapper
-        
-        # If it's not a color, let Python handle it normally (AttributeError)
+
         raise AttributeError(f"Type 'Print' has no attribute '{name}'")
+
 
 class Print(metaclass=ColorMeta):
     pass

@@ -1,4 +1,4 @@
-import { useContext } from "react"
+import { useContext, useRef } from "react"
 import UserProfile from "./GroupBar Components/UserProfile"
 import CommunityTab from "./GroupBar Components/CommunityTab"
 import ScrollBar from "../../common components/ScrollBar"
@@ -6,6 +6,7 @@ import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provide
 
 const GroupBar = ({username,email,communities}) => {
   // console.log("type of communities: ",communities)
+  const scrollbarRef=useRef(null)
 
   return (
     <div className='bg-[#454545] w-full max-w-[3rem] h-full flex flex-col'>
@@ -14,6 +15,7 @@ const GroupBar = ({username,email,communities}) => {
         className="bg-red-500 p-[0.25rem] w-full h-full overflow-auto "
       > */}
       <ScrollBar
+      ref={scrollbarRef}
       >
         {
           communities.map( (community, index)=>{

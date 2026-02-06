@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -86,7 +86,7 @@ class Channel_Members(Base):
 class Messages(Base):
     __tablename__ = 'Messages'
 
-    message_id= Column(Integer, primary_key=True, index=True)
+    message_id= Column(BigInteger, primary_key=True, autoincrement=True)
     sender_id=Column(Integer, ForeignKey("Users.user_id"), nullable=False)
     community_id=Column(Integer, nullable=False)
     channel_id=Column(Integer, nullable=False)

@@ -9,7 +9,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ChatLayout_Context_Provider } from './contexts/ChatLayout-context-provider'
 import ErrorFallback from './pages/ErrorFallback'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-
+import { WebSockets_ContextProvider } from './contexts/WebSockets-context-provider'
 
 
 const query_client=new QueryClient()
@@ -28,17 +28,21 @@ const router = createBrowserRouter([
     path:"/chats/:communityId?",
     element:
     <QueryClientProvider client={query_client}>
-      <ChatLayout_Context_Provider>
-        <ChatLayout />
-      </ChatLayout_Context_Provider>
+        <ChatLayout_Context_Provider>
+          <ChatLayout />
+        </ChatLayout_Context_Provider>
     </QueryClientProvider>
 
     ,
     errorElement:<ErrorFallback/>,
     children: [
       {
-        path: ":communityId/:channelId",
-        element: <ChatMessagesSection />,
+        path: ":channelId",
+        element: 
+        <WebSockets_ContextProvider>
+          <ChatMessagesSection />
+        </WebSockets_ContextProvider>
+        ,
       },
     ]
     ,

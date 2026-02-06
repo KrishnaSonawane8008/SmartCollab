@@ -34,11 +34,35 @@ services:
       NODE_ENV: development
     volumes:
       - ./backend:/usr/backend/src/app
+    command:
+      - uvicorn
+      - main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+
+  
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/usr/backend/src/app
+    deploy:
+      replicas: 3
+    command: python -m chats.worker
 
 
   postgresdb:
     image: postgres
-    restart: always
+    restart: unless-stopped
     user: postgres
     secrets:
       - postgresdb-password
@@ -57,6 +81,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+    environment:
+      - REDIS_PASSWORD=mysecretpassword
+    volumes:
+      - redis_data:/data # Maps a named volume to the Redis data directory
+
+
   pgadmin:
     image: dpage/pgadmin4
     profiles:
@@ -72,6 +109,7 @@ services:
 
 
 volumes:
+  redis_data:
   pgdata:
   frontend-node-modules-data:
   postgresdb-data:

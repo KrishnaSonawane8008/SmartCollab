@@ -3,21 +3,39 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import session, engine
 import database_models
+from contextlib import asynccontextmanager
 from sqlalchemy.orm import close_all_sessions
 from Datapopulation import populate_db
 from database_operations import drop_all_tables, is_database_empty
-
-
-
+from utilities.colour_print import Print
+from chats.async_redis_operations import async_RedisAPI
+import core
 # tables_to_create_on_init=[ database_models.Communties.__table__, database_models.Users.__table__ ]
 
 # database_models.Base.metadata.create_all(bind=engine, tables=tables_to_create_on_init)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    core.async_redis_api=async_RedisAPI(
+        host="redis",
+        port=6379,
+        password="mysecretpassword"
+    )
+
+    await core.async_redis_api.connect()
+    await core.async_redis_api.create_consumer_group(
+        stream_name="chat_broadcast", 
+        consumer_group_name="broadcast_consumers")
+    
+    core.async_redis_api_online=True
+    
+    yield
+
+    await core.async_redis_api.close_connection()
+    core.async_redis_api=None
 
 
-
-
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 
 origins = [
@@ -36,11 +54,13 @@ from auth.endpoints import router as auth_router
 from users.endpoints import router as users_router
 from communities.endpoints import router as communities_router
 from channels.endpoints import router as channels_router
+from chats.websockets import router as chats_ws_router
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(users_router, prefix="/users")
 app.include_router(communities_router, prefix="/communities")
 app.include_router(channels_router, prefix="/channels")
+app.include_router(chats_ws_router, prefix="/ws")
 
 
 def init_db():
@@ -72,3 +92,6 @@ def initialize_db():
 @app.get("/cors_test")
 def cors_test():
     return {"status": "ok"}
+
+
+Print.blue("============================================")

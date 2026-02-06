@@ -1,4 +1,4 @@
-from models import User, Access_Token, Community, Channel, Community_Member, Channel_Member, Message
+from models import User, Access_Token, Community, Channel, Community_Member, Channel_Member, MessageCreate
 import database_models
 from database import engine
 from datetime import datetime, timezone
@@ -145,8 +145,7 @@ def insert_into_messages(session: Session):
                 for verb in verb_slice:
                     for adjective in adjective_slice:
                         msg_id+=1
-                        message=Message(
-                            message_id=msg_id,
+                        message=MessageCreate(
                             sender_id=members[random.randint(0,members_size-1)].user_id,
                             community_id=channel.community_id,
                             channel_id=channel.channel_id,
