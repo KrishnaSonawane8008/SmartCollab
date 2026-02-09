@@ -12,17 +12,26 @@ export const WebSockets_ContextProvider = ({children}) => {
 
     const {communityId, channelId}=useParams()
 
-    const onConnect=()=>{
-        wsClient.send({type:"Room", communityId, channelId })
-    }
-
-    wsClient.subscribe_initializer(onConnect)
+    
 
     useEffect(()=>{
-        if(wsClient || !wsClient?.socket) {
-            wsClient.connect(`${BASE_URL}/ws/socket_test`)
+        if(!communityId || !channelId) {
+            return
         }
-        // console.log("useEffect ran in websocket context")
+        if(wsClient && !wsClient.socket) {
+
+            const onConnect=()=>{
+                wsClient.send({type:"Room", communityId, channelId })
+            }
+
+            wsClient.subscribe_initializer( `${communityId}${channelId}`,onConnect)
+
+            wsClient.connect(`${BASE_URL}/ws/socket_test`)
+            
+            return
+        }
+        
+        
         wsClient.send({type:"Room", communityId, channelId })
 
         // return ()=>wsClient.disconnect()

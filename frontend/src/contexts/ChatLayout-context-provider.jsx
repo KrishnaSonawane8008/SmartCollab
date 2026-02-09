@@ -8,6 +8,8 @@ export const ChatLayout_Context_Provider = ({children}) => {
     const [CurrentChannel, setCurrentChannel]=useState(null)
     const [CommunityChannelMap, setCommunityChannelMap]=useState({})
 
+    const [user_id, setUserid]=useState(null)
+
     const {communityId, channelId}=useParams()
     
     useEffect(()=>{ 
@@ -26,7 +28,9 @@ export const ChatLayout_Context_Provider = ({children}) => {
                                         CurrentChannel, 
                                         setCurrentChannel,
                                         CommunityChannelMap,
-                                        setCommunityChannelMap
+                                        setCommunityChannelMap,
+                                        user_id,
+                                        setUserid
                                         }}>
             {children}
         </ChatLayout_Context.Provider>

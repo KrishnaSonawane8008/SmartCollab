@@ -29,7 +29,7 @@ def get_user_profile(token: str=Depends(token_verification), db:Session=Depends(
     
     # Print.red(f"UserInfo: {user_info}")
 
-    return {"UserInfo":{"username":user_info.user_name, "email":user_info.user_email}}
+    return {"UserInfo":{"user_id":uid, "username":user_info.user_name, "email":user_info.user_email}}
 
 
 

@@ -1,12 +1,9 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import asyncio
-import redis
 from utilities.colour_print import Print
-from chats.redis_operations import RedisAPI
-import json, time
+import json
 from chats.WSClient import WSClient
 import core
-from datetime import datetime, timezone
 
 
 
@@ -101,7 +98,10 @@ class ConnectionManager:
 
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.pop(websocket.state.user_id)
+        if websocket.state.user_id in self.active_connections:
+            self.active_connections.pop(websocket.state.user_id)
+        if websocket.state.user_id not in self.connection_Rooms:
+            return
         for room_id in self.connection_Rooms[websocket.state.user_id]:
             if self.Rooms.get(room_id) is not None:
                 if websocket.state.user_id in self.Rooms[room_id]:

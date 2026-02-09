@@ -5,7 +5,7 @@ from utilities.colour_print import Print
 def get_redis_client(host='localhost', port=6379, password=None):
     try:
         # Create a connection to the Redis server
-        redis_client = redis.StrictRedis(
+        redis_client = redis.Redis(
             host=host,
             port=port,
             password=password,
@@ -29,7 +29,6 @@ class RedisAPI():
         self.redis_client=get_redis_client(host=host, port=port, password=password)
 
     
-        
     # Publish a message to a stream
     def publish_to_stream(self, stream_name, message):
         self.redis_client.xadd(stream_name, {'message': message})
@@ -38,7 +37,7 @@ class RedisAPI():
     def create_consumer_group(self, stream_name, consumer_group_name):
         # Check if the stream exists
         if self.redis_client.exists(stream_name):
-            print(f"Stream '{stream_name}' does not exist.")
+            print(f"Stream '{stream_name}' already exist.")
             consumer_groups=self.redis_client.xinfo_groups(stream_name)
             if consumer_group_name in consumer_groups:
                 Print.green("Stream and Consumer Group already exists")
@@ -60,4 +59,8 @@ class RedisAPI():
         except Exception as e:
             Print.red(e)
             return None
+
+    def close_connection(self):
+        self.redis_client.close()
+        Print.yellow("Redis Connection Closed")
 

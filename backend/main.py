@@ -9,6 +9,7 @@ from Datapopulation import populate_db
 from database_operations import drop_all_tables, is_database_empty
 from utilities.colour_print import Print
 from chats.async_redis_operations import async_RedisAPI
+from chats.redis_operations import RedisAPI
 import core
 # tables_to_create_on_init=[ database_models.Communties.__table__, database_models.Users.__table__ ]
 
@@ -17,6 +18,12 @@ import core
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     core.async_redis_api=async_RedisAPI(
+        host="redis",
+        port=6379,
+        password="mysecretpassword"
+    )
+
+    core.redis_api=RedisAPI(
         host="redis",
         port=6379,
         password="mysecretpassword"
@@ -33,6 +40,7 @@ async def lifespan(app: FastAPI):
 
     await core.async_redis_api.close_connection()
     core.async_redis_api=None
+    core.redis_api.close_connection()
 
 
 app = FastAPI(lifespan=lifespan)

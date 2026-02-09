@@ -10,7 +10,7 @@ import ChannelsPanel from "./ChatLayout Components/ChannelsPanel";
 import { useAsyncError } from "../../hooks/ErrorHooks";
 
 import { useUserInfo } from "../../hooks/user_hooks";
-
+import { ChatLayout_Context } from "../../contexts/ChatLayout-context-provider";
 
 
 
@@ -20,7 +20,7 @@ const ChatLayout = () => {
 
     const {getUserProfile, getCommunities}=useUserInfo()
 
-
+    const {user_id, setUserid}=useContext(ChatLayout_Context)
     const throwError=useAsyncError()
 
     const {communityId, channelId}=useParams();
@@ -36,6 +36,9 @@ const ChatLayout = () => {
             const userInfo=user_profile.UserInfo
             console.log("user profile: ",userInfo.username)
             setUserProfile(user_profile.UserInfo)
+            if(user_profile.UserInfo){
+                setUserid(user_profile.UserInfo.user_id)
+            }
         }).catch((e)=>{
             console.log("Error getting user profile: ")
             throwError(e)

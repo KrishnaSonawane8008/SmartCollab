@@ -14,7 +14,7 @@ async def get_redis_client(host='localhost', port=6379, password=None):
         
         # Ping the server to check the connection
         response = await redis_client.ping()
-        Print.green(f"Connected to Redis. Server responded with: {response}")
+        Print.green(f"Connected to Async Redis. Server responded with: {response}")
         return redis_client
     except Exception as e:
         Print.red(f"Error while creating redis client: {e}")
@@ -34,7 +34,7 @@ class async_RedisAPI():
     # Publish a message to a stream
     async def publish_to_stream(self, stream_name, message):
         await self.redis_client.xadd(stream_name, {'message': message})
-        Print.green("Message Added in Redis Stream")
+        Print.green("Message Added in Async Redis Stream")
 
     async def create_consumer_group(self, stream_name, consumer_group_name):
         # Create the consumer group
@@ -57,5 +57,5 @@ class async_RedisAPI():
     
     async def close_connection(self):
         await self.redis_client.close()
-        Print.yellow("Redis Connection Closed")
+        Print.yellow("Async Redis Connection Closed")
 
