@@ -56,6 +56,7 @@ SmartCollab : An AI -Powered Multilingual Platform for Real-Time Collaboration
 - `pip install -r requirements.txt` to install the dependencies
 - `uvicorn main:app --reload` to start the FastAPI server
 - the fastapi server connects with redis and postgres on start so if they are not running then it'll crash, so do start redis and postgres before starting backend server.
+- to fill postgres db with test data visit http:localhost:8000/populate_db while backend server is running.
 <br>
 
 ## Frontend
@@ -74,9 +75,13 @@ SmartCollab : An AI -Powered Multilingual Platform for Real-Time Collaboration
 - install mkcert with: `choco install mkcert -y`
 - then do: `mkcert -install`
 - then open the vscode terminal, and do: `mkcert localhost 127.0.0.1 ::1`, this will create localhost-key.pem and localhost.pem files in sfu-server folder
--create a new directory to hold the key and certificate, and add their file paths in the env in:
+- create a new directory to hold the key and certificate, and add their file paths in the env in:
     - SSL_DIR_PATH=>path of the directory holding the certificate and key
     - SSL_KEY_PATH=>path of key file in the directory
     - SSL_CERT_PATH=>path of certificate file in the directory
--then to run the sfu-server do: `npm run dev`
--start frontend and backend before starting sfu server 
+- then to run the sfu-server do: `npm run dev`
+- start frontend and backend before starting sfu server
+<br>
+
+## PS
+if testing sfu, run the project only on chrome, the sfu doesnt work with firefox because it has a diferent certificate requirement.
