@@ -3,7 +3,7 @@ import './index.css'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import {ChatLayout} from './pages/Chat/ChatLayout'
+import ChatLayout from './pages/Chat/ChatLayout'
 import ChatMessagesSection from './pages/Chat/ChatMessagesSection'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ChatLayout_Context_Provider } from './contexts/ChatLayout-context-provider'
@@ -37,7 +37,11 @@ const router = createBrowserRouter([
     element:
     <QueryClientProvider client={query_client}>
         <ChatLayout_Context_Provider>
-          <ChatLayout />
+          
+            <WebSockets_ContextProvider>
+            <ChatLayout />
+          </WebSockets_ContextProvider>
+         
         </ChatLayout_Context_Provider>
     </QueryClientProvider>
 
@@ -47,23 +51,21 @@ const router = createBrowserRouter([
       {
         path: ":channelId",
         element: 
-        <WebSockets_ContextProvider>
+        
           <ChatMessagesSection />
-        </WebSockets_ContextProvider>,
+
       },
       {
         path:":channelId/videocall",
         element: <VideoCallSection/>
       }
     ]
-    ,
-
   }
 ])
 
 createRoot(document.getElementById('root')).render(
     <Global_ContextProvider>
-      <RouterProvider router={router} />
+        <RouterProvider router={router} />
     </Global_ContextProvider>
   
 )

@@ -1,19 +1,20 @@
 import { Search } from 'lucide-react'
 import { useContext, useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provider"
-import { search_channels } from '../../../services/channel_services'
+import { search_channels, join_channel } from '../../../services/channel_services'
 
-const SearchBar = ({joined_Channels}) => {
+const SearchBar = ({joined_Channels, refetchChannels}) => {
   const { CommunityChannels } = useContext(ChatLayout_Context)
   const {communityId}=useParams()
   const [query, setQuery] = useState("");
-
+  const navigate=useNavigate()
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [channelList, setChannelList]=useState([])
+  
   const Empty_Input=()=>{
-    setQuery("")
     setChannelList([])
+    setQuery("")
   }
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const SearchBar = ({joined_Channels}) => {
   }, [debouncedQuery]);
 
   return (
-    <div className="px-4 py-3 bg-white flex-shrink-0 relative">
+    <div className="px-6 py-4 bg-transparent flex-shrink-0 relative">
       
       <div className="relative flex items-center">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -46,16 +47,17 @@ const SearchBar = ({joined_Channels}) => {
           type="text"
           placeholder="Find a channel..."
           // onChange={(e) => setChannelFilter(e.target.value)}
-          className="w-full bg-[#F9F7F4] border-none rounded-xl py-3 pl-12 pr-4 text-sm text-gray-900 placeholder:text-[#8A817C]"
+          className="w-full bg-white shadow-sm border border-black/[0.05] rounded-[14px] py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f1ead7]"
           value={query}
           onChange={(e)=>setQuery(e.target.value)}
         />
       </div>
 
-      <div className={` flex flex-col top-15 left-0 right-0 px-1.5 py-1 mx-2 rounded-[0.3rem] bg-white z-[10] border  ${debouncedQuery.length===0?" hidden":"absolute"}`}>
+      <div className={` flex flex-col top-15 left-0 right-0 px-1.5 py-1 mx-2 rounded-[0.3rem] bg-white z-[10] border  ${query.length===0?" hidden":"absolute"}`}>
         {joined_Channels &&
-          channelList.length>0?(
+          channelList.length>0 ?(
           channelList.map((value, index)=>{
+            console.log(value)
             let joined_channel=false
             for(const joined_chann of joined_Channels){
               if(joined_chann.channel_id===value.channel_id){
@@ -70,7 +72,19 @@ const SearchBar = ({joined_Channels}) => {
                 <span className="mr-auto">{value.channel_name}</span>
                 {!joined_channel && 
                   (
-                    <div className="w-fit bg-blue-400 px-1.5 py-1 rounded-[0.5rem]">
+                    <div className="w-fit bg-blue-400 px-1.5 py-1 rounded-[0.5rem]"
+                    onClick={()=>{
+                      Empty_Input()
+                      join_channel(value.community_id, value.channel_id).then((response)=>{
+                        if(response.Success===true){
+                          navigate(`/chats/${value.community_id}/${value.channel_id}`)
+                          refetchChannels()
+                        }
+                      }).catch((err)=>{
+                        console.log(err)
+                      })
+                    }}
+                    >
                       Join
                     </div>
                   )
@@ -93,3 +107,5 @@ const SearchBar = ({joined_Channels}) => {
 }
 
 export default SearchBar
+
+
