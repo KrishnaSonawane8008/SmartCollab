@@ -17,8 +17,9 @@ transcriber/PipelineTest/Output/*
 !transcriber/PipelineTest/Output/.gitkeep
 
 
-
-
+#backend
+backend/summary/Genarated_Summaries/*
+!backend/summary/Genarated_Summaries/.gitkeep
 
 
 #keys and certificates

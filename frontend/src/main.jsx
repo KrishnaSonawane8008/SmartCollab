@@ -12,6 +12,7 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { WebSockets_ContextProvider } from './contexts/WebSockets-context-provider'
 import { Global_ContextProvider } from './contexts/Global-context-provider'
 import VideoCallSection from './pages/Chat/VideoCallSection'
+import CallLogs from './pages/Chat/CallLogs'
 
 const query_client=new QueryClient()
 
@@ -56,7 +57,11 @@ const router = createBrowserRouter([
       {
         path:":channelId/videocall",
         element: <VideoCallSection/>
-      }
+      },
+      {
+        path:":channelId/call_logs",
+        element: <CallLogs/>
+      },
     ]
     ,
 

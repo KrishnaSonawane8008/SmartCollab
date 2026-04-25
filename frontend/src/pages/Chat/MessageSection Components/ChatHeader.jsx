@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { ChatLayout_Context } from '../../../contexts/ChatLayout-context-provider'
 import { useNavigate, useParams } from 'react-router-dom'
-import { EllipsisVertical, Video, Hash, LogOut } from 'lucide-react'
+import { EllipsisVertical, Video, Hash, LogOut, Phone, History, Clock, LucideArrowRightLeft } from 'lucide-react'
 import FloatingDiv from '../../common components/FloatingDiv'
 import { leave_channel } from '../../../services/channel_services'
 
@@ -32,7 +32,7 @@ const ChatHeader = ({queryClient}) => {
         button_parent_styles=""
       >
         {/* Dropdown panel */}
-        <div className="bg-[var(--sc-bg-elevated)] border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-[160px] m-1">
+        <div className="bg-[#f5f3ef] border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-[160px] m-1">
           {/* Video Call menu item — exact onClick preserved */}
           <div
             className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] cursor-pointer select-none transition-colors"
@@ -40,6 +40,17 @@ const ChatHeader = ({queryClient}) => {
           >
             <Video className="w-4 h-4 text-[var(--sc-text-secondary)]" />
             <span>Video Call</span>
+          </div>
+
+          <div
+            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] cursor-pointer select-none transition-colors"
+            onClick={() => navigate(`/chats/${url_params.communityId}/${url_params.channelId}/call_logs`)}
+          >
+            <div className='relative'>
+              <LucideArrowRightLeft className='w-[0.75rem] h-[0.75rem] absolute bottom-[0.5rem] left-[0.5rem] z-[1] bg-white -rotate-[45deg]'/>
+              <Phone className="w-4 h-4 z-[2] relative" />
+            </div>
+            <span>Call Logs</span>
           </div>
 
           <div
@@ -59,6 +70,7 @@ const ChatHeader = ({queryClient}) => {
             <LogOut className="w-4 h-4 text-[#ea0000]" />
             <span className='text-[#ea0000]'>Leave Channel</span>
           </div>
+
 
         </div>
       </FloatingDiv>

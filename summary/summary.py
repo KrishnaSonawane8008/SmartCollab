@@ -3,6 +3,7 @@ import re
 import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from utilities.colour_print import Print
 
 app = FastAPI()
 
@@ -45,11 +46,12 @@ def format_conversation(messages: list) -> str:
 
 async def get_summary(data: dict) -> str:
     messages = extract_messages(data)
+    Print.yellow("Extracting Messages...")
     if not messages: 
         return "Not enough content to generate a summary."
 
     conversation = format_conversation(messages)
-
+    Print.yellow("Conversation Formatted...")
     # Use the Chat API for Llama-3.1 Instruct
     payload = {
         "model": MODEL_NAME, 
@@ -69,17 +71,19 @@ async def get_summary(data: dict) -> str:
         ],
         "stream": False,
         "options": {
-            "temperature": 0.1  # Low temperature ensures factual accuracy
-            #"num_thread": 4 
+            "temperature": 0.1,  # Low temperature ensures factual accuracy
+            "num_thread": 2 
         }
     }
 
     async with httpx.AsyncClient(timeout=180) as client:
         try:
+            Print.magenta("Sent summary generation request to ollama server...")
             resp = await client.post(OLLAMA_URL, json=payload)
             resp.raise_for_status()
             result = resp.json()
-            
+
+            Print.green("Summary Generated!")
             # Extract content from the chat message structure
             return result.get("message", {}).get("content", "").strip()
         except httpx.HTTPStatusError as e:
