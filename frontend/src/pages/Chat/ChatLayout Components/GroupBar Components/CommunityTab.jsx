@@ -12,14 +12,14 @@ const CommunityTab = ({ communityId, communityName }) => {
   return (
     <div
       title={communityName}
-      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center cursor-pointer hover:opacity-80 my-2 transition-opacity ${isActive ? 'bg-[#2F5D50]' : 'bg-[#E8E4DE]'}`}
+      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl flex items-center justify-center cursor-pointer hover:opacity-80 my-2 transition-opacity ${isActive ? 'bg-[#E8E4DE]' : 'bg-[#2F5D50]'}`}
       onClick={() => {
         if (url_params.communityId == communityId) return
         const channel_id = CommunityChannelMap[communityId]
         navigate(`/chats/${communityId}/${channel_id ? channel_id : ''}`)
       }}
     >
-      <span className={`text-base font-bold uppercase select-none ${isActive ? 'text-white' : 'text-gray-600'}`}>
+      <span className={`text-base font-bold uppercase select-none ${isActive ? 'text-gray-600' : 'text-white'}`}>
         {communityName ? communityName[0].toUpperCase() : 'C'}
       </span>
     </div>

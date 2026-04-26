@@ -8,54 +8,50 @@ import { leave_channel } from '../../../services/channel_services'
 const ChatHeader = ({queryClient}) => {
   const navigate = useNavigate()
   const url_params = useParams()
-  const {setLeftChannel, LeftChannelRender, setLeftChannelRender}=useContext(ChatLayout_Context)
+  const {setLeftChannel, LeftChannelRender, setLeftChannelRender, CurrentChannel}=useContext(ChatLayout_Context)
+
+  const startCall=(communityId, channelId)=>{
+    navigate(`/chats/${communityId}/${channelId}/videocall`)
+  }
 
   return (
-    <div className="py-8 h-[2.75rem] flex-shrink-0  flex items-center px-4 justify-between border-b-1 border-[#e8e8e8]">
 
-      {/* Left: channel name */}
-      <div className="flex items-center gap-2">
-        <Hash className="w-4 h-4 text-[var(--sc-text-muted)]" />
-        <span className="text-[var(--sc-text-primary)] font-semibold text-sm">
-          {url_params.channelId ? `Channel ${url_params.channelId}` : 'Channel'}
-        </span>
+    <div className="py-8 h-[2.75rem] w-full flex-shrink-0 flex items-center px-8 justify-between border-b border-black/[0.05] bg-transparent">
+      {/* Left: channel name & status */}
+      <div className="flex flex-col justify-center">
+        {CurrentChannel?.ChannelName &&
+        <>
+          <h2 className="text-gray-900 font-bold text-[17px] leading-tight flex items-center gap-1.5">
+            <span className="text-gray-400 font-medium">#</span>
+            {CurrentChannel?.ChannelName}
+          </h2>
+          <div className="flex items-center gap-1.5 text-[10px] text-[#1F7A5A]">
+            <span className="w-1 h-1 rounded-full bg-[#22c55e]"></span>
+            <span className="font-medium">Online</span>
+          </div>
+        </>
+        }
       </div>
 
-      {/* Right: FloatingDiv trigger — all FloatingDiv logic preserved */}
-      <FloatingDiv
-        ToggleButtonComponent={() => (
-          <div className="p-1.5 rounded-md hover:bg-[var(--sc-bg-tertiary)] text-[var(--sc-text-muted)] hover:text-[var(--sc-text-secondary)] transition-colors cursor-pointer">
-            <EllipsisVertical className="w-4 h-4" />
-          </div>
-        )}
-        content_parent_classes=""
-        button_parent_styles=""
-      >
-        {/* Dropdown panel */}
-        <div className="bg-[#f5f3ef] border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-[160px] m-1">
-          {/* Video Call menu item — exact onClick preserved */}
-          <div
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] cursor-pointer select-none transition-colors"
-            onClick={() => navigate(`/chats/${url_params.communityId}/${url_params.channelId}/videocall`)}
-          >
-            <Video className="w-4 h-4 text-[var(--sc-text-secondary)]" />
-            <span>Video Call</span>
-          </div>
-
-          <div
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] cursor-pointer select-none transition-colors"
-            onClick={() => navigate(`/chats/${url_params.communityId}/${url_params.channelId}/call_logs`)}
-          >
-            <div className='relative'>
-              <LucideArrowRightLeft className='w-[0.75rem] h-[0.75rem] absolute bottom-[0.5rem] left-[0.5rem] z-[1] bg-white -rotate-[45deg]'/>
-              <Phone className="w-4 h-4 z-[2] relative" />
-            </div>
-            <span>Call Logs</span>
-          </div>
-
-          <div
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] cursor-pointer select-none transition-colors close-floating"
-            onClick={() =>{
+      {/* Right: Actions */}
+      <div className="flex items-center gap-6">
+        <Video 
+          className="w-5 h-5 text-[#1c332b] cursor-pointer hover:opacity-70 transition-opacity" 
+          onClick={() => startCall(url_params.communityId, url_params.channelId)} 
+        />
+        <div className="w-px h-5 bg-gray-200" />
+        <FloatingDiv
+          ToggleButtonComponent={() => (
+            <EllipsisVertical className="w-5 h-5 text-[#1c332b] cursor-pointer hover:opacity-70 transition-opacity" />
+          )}
+          content_parent_classes=""
+          button_parent_styles=""
+        >
+          {/* Dropdown panel */}
+          <div className="bg-[rgba(255,255,255,0.85)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.5)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-2 min-w-[180px] m-1 right-0 absolute z-50">
+            <button
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50/80 cursor-pointer select-none transition-colors close-floating font-medium"
+              onClick={() =>{
               navigate(`/chats/${url_params.communityId}/`)
               leave_channel(url_params.communityId, url_params.channelId).then((response)=>{
                 if(response.Success===true){
@@ -66,16 +62,16 @@ const ChatHeader = ({queryClient}) => {
                 console.error(e)
               })
             }}
-          >
-            <LogOut className="w-4 h-4 text-[#ea0000]" />
-            <span className='text-[#ea0000]'>Leave Channel</span>
+            >
+              <LogOut className="w-4 h-4 text-red-500" />
+              <span>Leave Channel</span>
+            </button>
           </div>
-
-
-        </div>
-      </FloatingDiv>
-
+        </FloatingDiv>
+      </div>
     </div>
+
+
   )
 }
 

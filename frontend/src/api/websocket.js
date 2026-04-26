@@ -20,7 +20,7 @@ class WebSocketAPI{
 
         this.socket.onmessage=(event)=>{
             const data= JSON.parse(event.data)
-            console.log("data recieved: ",data)
+            // console.log("data recieved: ",data)
             this.listeners.forEach((fn, key)=>{fn(data)})
         }
 

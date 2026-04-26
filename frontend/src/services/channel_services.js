@@ -30,7 +30,12 @@ export async function get_channel_messages(communityId, channelId, preferred_lan
         }
     }
     
-    return data
+    // console.log(preferred_language)
+
+    return {
+        ...data,
+        Messages: data.Messages?.map(msg => ({ ...msg }))
+    };
     
 }
 
