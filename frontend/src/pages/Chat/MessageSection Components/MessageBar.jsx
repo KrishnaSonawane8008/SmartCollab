@@ -2,78 +2,130 @@ import { forwardRef, useImperativeHandle, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SendHorizonal } from 'lucide-react'
 
-// TextArea with mirror-based auto-height — all logic preserved exactly
-const TextArea = forwardRef(({ onEnter_callback }, ref) => {
-  const visibleRef = useRef(null)
-  const mirrorRef = useRef(null)
+const TextArea=forwardRef((props, ref)=>{
 
-  const syncHeight = () => {
-    if (!visibleRef.current || !mirrorRef.current) return
-    mirrorRef.current.value = visibleRef.current.value
-    visibleRef.current.style.height = mirrorRef.current.scrollHeight + 'px'
+  const {max_height=100, onEnter_callback}=props
+
+  const textareaRef=useRef()
+  const mirror_textareaRef=useRef()
+
+  const handleChange=(event)=>{
+    // console.log(event.target.value)
+    const element=textareaRef.current
+    const mirror_element=mirror_textareaRef.current
+    if(!element || !mirror_element) return
+    
+    
+    mirror_element.value=event.target.value
+    if(mirror_element.scrollHeight>max_height){
+      mirror_element.style.width=`${element.offsetWidth}px`
+      element.style.overflowY="auto"
+    }else{
+      mirror_element.style.width=`${element.offsetWidth+15}px`
+      element.style.overflowY="hidden"
+      element.style.height = `${mirror_element.scrollHeight}px`
+    }
+
   }
 
-  const handleChange = (e) => {
-    syncHeight()
-  }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      EnterText()
+    const element=textareaRef.current
+    const mirror_element=mirror_textareaRef.current
+    if(!element || !mirror_element) return
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault() // stop newline
+      // console.log("sent message: ", element.value)
+      if(onEnter_callback && typeof onEnter_callback === "function"){
+        onEnter_callback(element.value)
+      }
+      clearTextArea()
     }
   }
 
-  const EnterText = () => {
-    if (!visibleRef.current) return
-    const value = visibleRef.current.value.trim()
-    if (!value) return
-    if (onEnter_callback) onEnter_callback(value)
+  const EnterText=()=>{
+    const element=textareaRef.current
+    const mirror_element=mirror_textareaRef.current
+    if(!element || !mirror_element) return
+
+    // console.log("sent message: ", element.value)
+    if(onEnter_callback && typeof onEnter_callback === "function"){
+      onEnter_callback(element.value)
+    }
     clearTextArea()
+    
   }
 
-  const clearTextArea = () => {
-    if (visibleRef.current) {
-      visibleRef.current.value = ''
-      visibleRef.current.style.height = 'auto'
-    }
-    if (mirrorRef.current) {
-      mirrorRef.current.value = ''
-    }
+  const clearTextArea=()=>{
+    const element=textareaRef.current
+    const mirror_element=mirror_textareaRef.current
+    if(!element || !mirror_element) return
+
+    element.value=""
+    mirror_element.value=""
+    element.style.overflowY="hidden"
+    element.style.height = `${mirror_element.scrollHeight}px`
   }
 
-  const FillTextArea = (text) => {
-    if (visibleRef.current) {
-      visibleRef.current.value = text
-      syncHeight()
+  const FillTextArea=(value)=>{
+    const element=textareaRef.current
+    const mirror_element=mirror_textareaRef.current
+    if(!element || !mirror_element) return
+    
+    
+    mirror_element.value=value
+    if(mirror_element.scrollHeight>max_height){
+      mirror_element.style.width=`${element.offsetWidth}px`
+      element.style.overflowY="auto"
+    }else{
+      mirror_element.style.width=`${element.offsetWidth+15}px`
+      element.style.overflowY="hidden"
+      element.style.height = `${mirror_element.scrollHeight}px`
     }
   }
 
   useImperativeHandle(ref, () => ({
     clearTextArea,
     FillTextArea,
-    EnterText,
+    EnterText
   }))
 
-  return (
-    <div className="relative flex-1">
-      {/* Mirror textarea — must be rendered (not display:none) for scrollHeight to work */}
-      <textarea
-        ref={mirrorRef}
-        aria-hidden="true"
-        tabIndex={-1}
-        className="absolute top-0 right-0 -z-50 opacity-0 pointer-events-none bg-transparent text-sm resize-none overflow-hidden w-full border-none outline-none"
-        rows={1}
-      />
-      {/* Visible textarea */}
-      <textarea
-        ref={visibleRef}
-        rows={1}
-        placeholder="Message..."
+  return(
+    <div className="relative w-full flex flex-row items-center overflow-hidden">
+      <textarea 
+        ref={textareaRef}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder:text-[#8A817C] w-full flex resize-none"
-      />
+        name="ChatMessageBar" 
+        id="ChatMessageBar"
+        rows={1}
+        className=" text-sm  border-none outline-none
+        overflow-hidden bg-transparent
+        w-full resize-none
+        px-1  !max-h-[500px] rounded-[0.4rem] text-[0.9rem]
+        h-auto
+        "
+        >
+          
+      </textarea>
+
+      <textarea 
+      ref={mirror_textareaRef}
+      name="textarea_mirror" 
+      id="ta_mirror"
+      rows={1}
+      disabled={true}
+      className="
+        -z-[50] text-white
+        w-full border-1 resize-none
+        px-1 rounded-[0.4rem] text-[0.9rem]
+        h-auto 
+        absolute top-[9999px] bg-white
+      "
+      >
+
+      </textarea>
     </div>
   )
 })
@@ -93,27 +145,47 @@ const MessageBar = ({ onEnter_callback }) => {
   }
 
   return (
-    <div className="w-full flex justify-center pb-4 bg-transparent">
-      <div className="w-full max-w-3xl">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E8E4DE] shadow-sm">
+    // <div className="w-full flex justify-center pb-4 bg-transparent">
+    //   <div className="w-full max-w-3xl">
+    //     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E8E4DE] shadow-sm">
 
+    //       <TextArea
+    //         ref={textAreaRef}
+    //         onEnter_callback={sendText}
+    //       />
+
+    //       {/* Send button */}
+    //       <button
+    //         type="button"
+    //         onClick={() => textAreaRef.current?.EnterText()}
+    //         className="w-9 h-9 flex items-center justify-center rounded-full bg-[#2F5D50] text-white hover:opacity-90 transition"
+    //       >
+    //         <SendHorizonal className="w-4 h-4" />
+    //       </button>
+
+    //     </div>
+    //   </div>
+    // </div>
+
+     <div className="w-full flex justify-center">
+      <div className="flex items-center w-[60%] gap-2.5">
+        <div className="flex-1 flex items-center px-4 py-[12px] rounded-[28px] bg-[rgba(255,255,255,0.6)] backdrop-blur-[14px] border-none shadow-[0_8px_20px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all">
           <TextArea
             ref={textAreaRef}
             onEnter_callback={sendText}
           />
-
-          {/* Send button */}
-          <button
+        </div>
+        
+        <button
             type="button"
             onClick={() => textAreaRef.current?.EnterText()}
             className="w-9 h-9 flex items-center justify-center rounded-full bg-[#2F5D50] text-white hover:opacity-90 transition"
           >
             <SendHorizonal className="w-4 h-4" />
           </button>
-
-        </div>
       </div>
     </div>
+
   )
 }
 

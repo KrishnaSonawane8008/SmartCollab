@@ -6,6 +6,7 @@ const Global_ContextProvider = ({ children }) => {
 
   const [LoggedOut, setLoggedOut] = useState(false)
   const [UserData, setUserData]=useState(null)
+  const [LanguageChanged, setLanguageChanged]=useState(false)
 
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -33,7 +34,8 @@ const Global_ContextProvider = ({ children }) => {
     <Global_Context.Provider value={{ 
                                     toggle_darkMode, theme, toggleTheme,
                                     LoggedOut, setLoggedOut,
-                                    UserData, setUserData
+                                    UserData, setUserData,
+                                    LanguageChanged, setLanguageChanged
                                     }}>
       {children}
     </Global_Context.Provider>

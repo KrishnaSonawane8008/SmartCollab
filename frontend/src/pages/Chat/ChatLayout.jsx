@@ -22,6 +22,8 @@ const ChatLayout = () => {
 
     const [UserProfile, setUserProfile]=useState(null)
     const [UserCommunities, setUserCommunities]=useState(null)
+
+    const [channelOpen, setChannelOpen] = useState(true)
     
   
     useEffect(()=>{
@@ -61,19 +63,70 @@ const ChatLayout = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-[var(--sc-bg-primary)] flex flex-row overflow-hidden font-[Inter] text-[var(--sc-text-primary)]">
-      <div className="h-full flex flex-row flex-shrink-0">
+    <div>
+
+    <div className="chat-wrapper p-4 bg-[#152e24]">
+
+
+      <div 
+        className="w-[68px] h-full flex flex-col flex-shrink-0 z-20 items-center py-4 rounded-[28px] border border-[rgba(255,255,255,0.1)] transition-all mr-4"
+        style={{
+          background: 'linear-gradient(180deg, #1F4D3A 0%, #153C2E 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 30px rgba(0,0,0,0.25)'
+        }}
+      >
         <GroupBar
           username={UserProfile.username}
           email={UserProfile.email}
+          channelOpen={channelOpen}
+          setChannelOpen={setChannelOpen}
         />
-        <ChannelsPanel />
       </div>
       
-      {/* Chat Area */}
-      <div className="flex-1 bg-[#F5F3EF] flex flex-col">
-        {channelId ? <Outlet /> : <EmptyChatSection />}
+      {/* Main Workspace Card */}
+      <div className="main-workspace-card rounded-[32px] bg-[#f8f8f8] shadow-[inset_0_4px_24px_rgba(0,0,0,0.02),0_10px_30px_rgba(0,0,0,0.2)] font-[Inter] text-[var(--sc-text-primary)]">
+        
+        {/* Channels Panel - Persistent Width Toggle */}
+
+          <div 
+            className={`channels-panel-wrapper bg-[#f5f6f5] border-r border-gray-100 ${channelOpen ? "w-[280px]!" : "w-[0px]!"} transition-all duration-200 overflow-hidden`}
+            // style={{ width: channelOpen ? "280px" : "0px" }}
+          >
+            <div className="w-[280px] h-full"> 
+              <ChannelsPanel />
+            </div>
+          </div>
+        
+        
+        {/* Chat Section Area */}
+        <div className="chat-section relative">
+          
+          {/* 1. CHAT AREA (Visible if no active call or if call is minimized/maximized) */}
+          {
+            channelId ? <Outlet /> : <EmptyChatSection />
+          }
+
+          {/* 2. VIDEO CALL (SINGLE INSTANCE) */}
+          {/* {callActive && (
+            <div
+              className={`
+                ${maximized ? "fixed inset-0 z-50 p-4 bg-[#152e24]" : "absolute inset-0 z-40"}
+                ${minimized ? "hidden" : "block"}
+              `}
+            >
+                <VideoCallSection />
+            </div>
+          )} */}
+
+          {/* 3. MINIMIZED CALL (Floating Window) */}
+          {/* {callActive && minimized && (
+            <MinimizedCall />
+          )} */}
+          
+        </div>
       </div>
+    </div>
+
     </div>
   )
 }

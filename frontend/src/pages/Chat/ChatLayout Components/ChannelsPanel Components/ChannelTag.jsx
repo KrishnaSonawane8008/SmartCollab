@@ -1,25 +1,43 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Hash } from 'lucide-react'
+import { ChatLayout_Context } from '../../../../contexts/ChatLayout-context-provider'
+import { useContext, useEffect } from 'react'
 
 const ChannelTag = ({ channel_name, channel_id }) => {
   const url_params = useParams()
   const navigate = useNavigate()
+  const {setCurrentChannel}=useContext(ChatLayout_Context)
+
   const isActive = url_params.channelId == channel_id
+
+  useEffect(()=>{
+    if(isActive){
+      setCurrentChannel({ChannelName: channel_name})
+    }
+  },[isActive])
 
   return (
     <div
       className={`
-        flex items-center gap-1.5 h-8 mx-2 my-0.5 px-2 rounded-md
-        cursor-pointer select-none transition-colors duration-100 text-sm
+        flex items-center justify-between h-10 mx-2 my-1.5 px-3 rounded-[12px]
+        cursor-pointer select-none transition-colors duration-200 text-[13px] font-medium
         ${isActive
-          ? 'bg-[#F4E6C8] text-[#2F5D50] font-medium'
-          : 'text-[#8A817C] hover:bg-[#F9F7F4] hover:text-gray-900'
+          ? 'bg-[#F2E8D7] text-[#1c332b]'
+          : 'bg-transparent text-gray-500 hover:bg-gray-200/50 hover:text-gray-900'
         }
       `}
-      onClick={() => navigate(`/chats/${url_params.communityId}/${channel_id}`)}
+      onClick={() =>{ 
+          navigate(`/chats/${url_params.communityId}/${channel_id}`)
+        }
+      }
     >
-      <Hash className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={isActive ? 2.5 : 2} />
-      <span className="truncate min-w-0">{channel_name}</span>
+      <div className="flex items-center gap-2">
+        <Hash className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#1c332b]' : 'text-gray-400'}`} strokeWidth={2} />
+        <span className="truncate min-w-0">{channel_name}</span>
+      </div>
+      {isActive && (
+        <div className="w-2.5 h-2.5 rounded-full bg-[#1c332b] flex-shrink-0" />
+      )}
     </div>
   )
 }

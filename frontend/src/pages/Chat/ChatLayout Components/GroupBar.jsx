@@ -2,16 +2,17 @@ import { useRef, useContext, useEffect, useState } from "react"
 import UserProfile from "./GroupBar Components/UserProfile"
 import CommunityTab from "./GroupBar Components/CommunityTab"
 import ScrollBar from "../../common components/ScrollBar"
-import { Sun, Moon, PlusIcon, SearchIcon } from "lucide-react"
+import { Sun, Moon, Plus, PlusIcon, SearchIcon } from "lucide-react"
 import { Global_Context } from "../../../contexts/Global-context-provider"
 import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provider"
 import FloatingDiv from "../../common components/FloatingDiv"
+import CenterFloatingDiv from "../../common components/CenterFloatingDiv"
 import { create_community } from "../../../services/community_services"
 import { useNavigate } from "react-router-dom"
 import {get_communities} from "../../../services/user_services"
 import { search_communities, join_community } from "../../../services/community_services"
 
-const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoinedCommunity})=>{
+const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoinedCommunity, setShowSearchCommunity})=>{
   
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -44,25 +45,27 @@ const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoined
   }, [debouncedQuery]);
 
   return (
-    <div className="w-8 h-8 rounded-lg bg-[#02a1ac] flex items-center justify-center flex-shrink-0 select-none"
-      >
 
-      <FloatingDiv
-        ToggleButtonComponent={() => (
-          <SearchIcon className="!size-[1.3rem] cursor-pointer"/>
-        )}
-        content_parent_classes=""
-        button_parent_styles=""
-        cleanup_method={Empty_Input}
-      >
-        {/* Dropdown panel */}
-        <div className="mx-3 my-1 flex flex-col items-center bg-white border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-fit">
-        
-          <input type="text" placeholder=" ...Search Communities" className="mx-1 my-1.5 px-2 py-1 outline-0 bg-[#f9f7f4] rounded-[0.4rem]"
-          value={query}
-          onChange={(e)=>setQuery(e.target.value)}
+    <CenterFloatingDiv setOpen={setShowSearchCommunity} parent_classes="flex flex-col min-w-[400px]">
+      <div className="p-6">
+        <h2 className="text-xl font-bold mb-4 text-[var(--sc-on-surface)] flex items-center gap-2">
+          <SearchIcon className="w-5 h-5 text-[var(--sc-primary)]" />
+          Search Communities
+        </h2>
+        <div className="flex flex-col mb-4 bg-[var(--sc-surface-low)] rounded-xl border border-[var(--sc-outline-variant)]">
+          <input 
+            type="text" 
+            placeholder="Type community name..." 
+            className="w-full px-4 py-3 outline-none bg-transparent rounded-xl text-sm"
+            value={query}
+            onChange={(e)=>setQuery(e.target.value)}
           />
-
+        </div>
+        
+        <div className="max-h-[300px] overflow-y-auto w-full custom-scrollbar flex flex-col gap-2">
+          {communityList.length === 0 && debouncedQuery && (
+             <div className="text-center text-sm text-[var(--sc-on-surface-variant)] py-4">No communities found.</div>
+          )}
           {
             communityList.map((value, index)=>{
               let joined_community=false
@@ -73,28 +76,28 @@ const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoined
                 }
               }
               return(
-                <div className="flex items-center px-3 py-1 rounded-md text-sm text-[var(--sc-text-primary)] select-none transition-colors w-full bg-[var(--sc-bg-tertiary)] my-1"
+                <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--sc-outline-variant)] hover:bg-[var(--sc-surface-low)] transition-colors"
                 key={index}
                 >
-                  <span className="mr-auto">{value.community_name}</span>
+                  <span className="font-semibold text-[var(--sc-on-surface)] text-sm">{value.community_name}</span>
                   {!joined_community?
                     (
-                      <div className="w-fit bg-blue-400 px-1.5 py-1 rounded-[0.5rem] cursor-pointer close-floating"
-                      onClick={()=>{
-                        join_community(value.community_id).then((response)=>{
-                          if(response.Success===true){
-                            navigate(`/chats/${response.NewCommId}`)
-                            setJoinedCommunity(!JoinedCommunity)
-                          }
-                        }).catch((error)=>{
-                          console.error(error)
-                        })
-                      }}
+                      <button className="bg-[var(--sc-primary)] text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                        onClick={()=>{
+                          join_community(value.community_id).then((response)=>{
+                            if(response.Success===true){
+                              navigate(`/chats/${response.NewCommId}`)
+                              setJoinedCommunity(!JoinedCommunity)
+                            }
+                          }).catch((error)=>{
+                            console.error(error)
+                          })
+                        }}
                       >
                         Join
-                      </div>
+                      </button>
                     ):(
-                      <div className="w-fit text-[#006eff] px-1.5 py-1 rounded-[0.5rem]">
+                      <div className="text-[var(--sc-tertiary)] bg-[var(--sc-tertiary)]/10 px-3 py-1.5 text-xs font-bold rounded-lg">
                         Joined
                       </div>
                     )
@@ -103,16 +106,14 @@ const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoined
               )
             })
           }
-
         </div>
-      </FloatingDiv>
-
       </div>
+    </CenterFloatingDiv>
   )
 }
 
 
-const CreateCommunity=({AddedCommunity, setAddedCommunity})=>{
+const CreateCommunity=({AddedCommunity, setAddedCommunity, setShowCreateCommunity})=>{
 
   const InputRef=useRef("")
   const [InputString, setInputString]=useState('')
@@ -124,63 +125,68 @@ const CreateCommunity=({AddedCommunity, setAddedCommunity})=>{
   const navigate=useNavigate()
   // console.log("hi")
   return (
-    <div title="Create Community" className="w-8 h-8 rounded-lg bg-[#f4e6c8] flex items-center justify-center flex-shrink-0 select-none"
-      >
-
-      <FloatingDiv
-        ToggleButtonComponent={() => (
-          <PlusIcon className="cursor-pointer"/>
-        )}
-        content_parent_classes=""
-        button_parent_styles=""
-      >
-        {/* Dropdown panel */}
-        <div className="mx-3 my-1 flex flex-col items-center bg-white border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-fit">
-        
-          <div
-            className="flex flex-row"
-          >
-            <input ref={InputRef} type="text" placeholder="Community name" className="mx-1 my-1.5 px-2 py-1 outline-0 bg-[#f9f7f4] rounded-[0.4rem]"
+      <CenterFloatingDiv setOpen={setShowCreateCommunity} parent_classes="flex flex-col min-w-[350px]">
+      <div className="p-6">
+        <h2 className="text-xl font-bold mb-6 text-[var(--sc-on-surface)] flex items-center gap-2">
+          <Plus className="w-5 h-5 text-[var(--sc-primary)]" />
+          Create Community
+        </h2>
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-[var(--sc-on-surface-variant)] uppercase tracking-wider mb-2">Community Name</label>
+          <input 
+            type="text" 
+            placeholder="e.g. Acme Design Team" 
+            className="w-full px-4 py-3 outline-none bg-[var(--sc-surface-low)] rounded-xl border border-[var(--sc-outline-variant)] focus:border-[var(--sc-primary)] transition-colors text-sm"
+            value={InputString}
             onChange={(e)=>{TextUpdate(e)}}
-            />
-            <button
-              className={`px-2 py-0.5 mx-1 rounded-lg flex items-center justify-center bg-[#f4e6c8] transition-colors cursor-pointer close-floating
-              ${InputString.length>0?"text-green-400":"text-red-400"}  
-              `}
-              disabled={InputString.length>0?false:true}
-              onClick={()=>{
-                setInputString('')
-                create_community(InputString).then((response)=>{
-                  if(response.Success==true){
-                    navigate(`/chats/${response.NewCommId}`)
-                    setAddedCommunity(!AddedCommunity)
-                    console.log("Community Created")
-                  }
-                }).catch((error)=>{
-                  console.error(error)
-                })
-              }}
-            >
-              Create
-            </button>
-          </div>
-
+          />
         </div>
-      </FloatingDiv>
-
+        <div className="flex justify-end gap-3 mt-4">
+          <button 
+            className="px-5 py-2 text-sm font-semibold text-[var(--sc-on-surface-variant)] hover:bg-[var(--sc-surface-low)] rounded-xl transition-colors"
+            onClick={() => setShowCreateCommunity(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm ${InputString.length>0 ? 'bg-[var(--sc-primary)] text-white hover:opacity-90' : 'bg-[var(--sc-surface-variant)] text-[var(--sc-on-surface-variant)] cursor-not-allowed opacity-60'}`}
+            disabled={InputString.length === 0}
+            onClick={()=>{
+              setInputString('')
+              create_community(InputString).then((response)=>{
+                if(response.Success==true){
+                  navigate(`/chats/${response.NewCommId}`)
+                  setAddedCommunity(!AddedCommunity)
+                  console.log("Community Created")
+                }
+              }).catch((error)=>{
+                console.error(error)
+              })
+            }}
+          >
+            Create
+          </button>
+        </div>
       </div>
+    </CenterFloatingDiv>
+
+
   )
 }
 
 
 
-const GroupBar = ({ username, email }) => {
+const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
   const scrollbarRef = useRef(null)
   const [communities, setUserCommunities]=useState(null)
   const [AddedCommunity, setAddedCommunity]=useState(false)
   const [JoinedCommunity, setJoinedCommunity]=useState(false)
+
   const { theme, toggleTheme } = useContext(Global_Context)
   const {LeftCommunityRender}=useContext(ChatLayout_Context)
+
+  const [ShowCreateCommunity, setShowCreateCommunity]=useState(false)
+  const [ShowSearchCommunity, setShowSearchCommunity]=useState(false)
 
   useEffect(()=>{
     get_communities().then(
@@ -197,87 +203,111 @@ const GroupBar = ({ username, email }) => {
   },[AddedCommunity, LeftCommunityRender, JoinedCommunity])
 
   return (
-    <div className="w-[72px] bg-[#F9F7F4] border-r border-[#E8E4DE] border-opacity-60 flex flex-col items-center py-4 h-full">
+  
+    <div className="w-full flex flex-col items-center gap-[12px] pb-4 h-full overflow-hidden">
 
-    
+      <div className="w-[44px] h-[44px] flex-shrink-0 rounded-[14px] flex items-center justify-center bg-transparent hover:bg-[rgba(255,255,255,0.08)] hover:scale-105 active:bg-[#E6D3B3] active:shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-250 cursor-pointer group" title="Search Communities" >
+        <svg className="w-[20px] h-[20px] fill-[#DDE6E0] group-hover:fill-white group-active:fill-[#1F4D3A] transition-colors" viewBox="0 0 24 24">
+          <circle cx="12" cy="6" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="12" r="3" />
+          <circle cx="12" cy="18" r="3" />
+        </svg>
+      </div>
 
       <FloatingDiv
         ToggleButtonComponent={() => (
-
-          <svg className="w-8 h-8 fill-[#2F5D50] mb-5" viewBox="0 0 24 24">
-            <circle cx="12" cy="6" r="3" />
-            <circle cx="6" cy="12" r="3" />
-            <circle cx="18" cy="12" r="3" />
-            <circle cx="12" cy="18" r="3" />
-          </svg>
-
+          <div className="w-[44px] h-[44px] flex-shrink-0 rounded-[16px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group" title="Add Community">
+            <Plus className="w-[20px] h-[20px] flex-shrink-0 text-[#DDE6E0] group-hover:text-white transition-colors" strokeWidth={2} />
+          </div>
         )}
         content_parent_classes=""
         button_parent_styles_tailwind=""
-        
       >
-        {/* Dropdown panel */}
-        <div className="mx-3 my-1 flex flex-col bg-[#fcf9f8] border border-[var(--sc-border)] rounded-lg shadow-sm p-1 min-w-fit">
-        
-          {/* AddCommunity */}
-          <div className="flex flex-row items-center justify-start py-1">
-            <span className="font-[Inter] text-[#2f5d50] ml-1 pr-1 mr-auto">Create Community</span>
-              <CreateCommunity
-                AddedCommunity={AddedCommunity}
-                setAddedCommunity={setAddedCommunity}
-              />
-          </div>
-
-          {/* Search Communities */}
-          <div className="flex flex-row items-center py-1">
-            <span className="font-[Inter] text-[#2f5d50] ml-1 pr-1 mr-auto">Search Communities</span>
-              <SearchCommunities
-                already_joined_communities={communities}
-                JoinedCommunity={JoinedCommunity}
-                setJoinedCommunity={setJoinedCommunity}
-              />
-          </div>
-
+        <div className="mx-3 my-1 flex flex-col bg-[rgba(255,255,255,0.85)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.5)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] min-w-[200px] overflow-hidden">
+          <button 
+            className="flex items-center gap-3 px-4 py-3 hover:bg-[rgba(0,0,0,0.04)] transition-colors text-[13px] font-semibold text-gray-800 close-floating text-left"
+            onClick={() => setShowCreateCommunity(true)}
+          >
+            <div className="w-8 h-8 rounded-full bg-[var(--sc-primary)]/10 flex items-center justify-center text-[var(--sc-primary)]">
+              <Plus className="w-4 h-4" />
+            </div>
+            Create Community
+          </button>
+          
+          <button 
+            className="flex items-center gap-3 px-4 py-3 hover:bg-[rgba(0,0,0,0.04)] transition-colors border-t border-[rgba(0,0,0,0.05)] text-[13px] font-semibold text-gray-800 close-floating text-left"
+            onClick={() => setShowSearchCommunity(true)}
+          >
+            <div className="w-8 h-8 rounded-full bg-[var(--sc-tertiary)]/10 flex items-center justify-center text-[var(--sc-tertiary)]">
+              <SearchIcon className="w-4 h-4" />
+            </div>
+            Search Communities
+          </button>
         </div>
       </FloatingDiv>
+      
+      {/* Sidebar Channel Toggle Button */}
+      <button 
+        onClick={() => setChannelOpen(prev => !prev)}
+        className="w-[44px] h-[44px] flex-shrink-0 rounded-[14px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group"
+        title="Toggle Channels"
+      >
+        <div className="text-[#DDE6E0] group-hover:text-white transition-colors">
+          {channelOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
+          )}
+        </div>
+      </button>
 
-
+      {/* Divider */}
+      <div className="w-6 h-px bg-white/20 mt-2 mb-2 flex-shrink-0" />
 
       {/* Community list */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center gap-3">
+      <div className="flex-1 w-full min-h-0 overflow-hidden">
         <ScrollBar ref={scrollbarRef}>
-          {communities && 
-          communities.map((community, index) => (
-            <CommunityTab
-              key={index}
-              communityId={community.community_id}
-              communityName={community.community_name}
-            />
+          <div className="flex flex-col items-center gap-[12px] w-full">
+            { communities && 
+              communities.map((community, index) => (
+              <CommunityTab
+                key={index}
+                communityId={community.community_id}
+                communityName={community.community_name}
+              />
           ))}
+          </div>
         </ScrollBar>
       </div>
 
       {/* Divider */}
-      <div className="w-6 h-px bg-[var(--sc-border)] mt-2 mb-2 flex-shrink-0" />
-
-      {/* Theme toggle */}
-      {/* <button
-        onClick={toggleTheme}
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 text-[var(--sc-text-muted)] hover:text-[var(--sc-text-primary)] hover:bg-[var(--sc-bg-tertiary)] transition-colors flex-shrink-0"
-      >
-        {theme === 'dark'
-          ? <Sun className="w-4 h-4" />
-          : <Moon className="w-4 h-4" />
-        }
-      </button> */}
+      <div className="w-6 h-px bg-white/20 mt-2 mb-2 flex-shrink-0" />
 
       {/* User profile */}
-      <div className="flex-shrink-0" title={`${username}\n${email}`}>
+      <div className="flex-shrink-0 mt-auto">
         <UserProfile username={username} email={email} />
       </div>
 
+      {/* Modals */}
+      {ShowCreateCommunity && (
+        <CreateCommunity
+          AddedCommunity={AddedCommunity}
+          setAddedCommunity={setAddedCommunity}
+          setShowCreateCommunity={setShowCreateCommunity}
+        />
+      )}
+      
+      {ShowSearchCommunity && (
+        <SearchCommunities
+          already_joined_communities={communities}
+          JoinedCommunity={JoinedCommunity}
+          setJoinedCommunity={setJoinedCommunity}
+          setShowSearchCommunity={setShowSearchCommunity}
+        />
+      )}
     </div>
+
   )
 }
 
