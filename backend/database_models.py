@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint, BigInteger, MetaData
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, ForeignKeyConstraint, BigInteger, MetaData, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
 import os
@@ -100,6 +100,28 @@ class Messages(Base):
     channel_id=Column(Integer, nullable=False)
     message=Column(String)
     sent_at=Column(DateTime(timezone=True))
+
+    __table_args__=(
+        ForeignKeyConstraint(
+            ["community_id", "channel_id"],
+            ["Channels.community_id", "Channels.channel_id"],
+            ondelete="CASCADE",
+        ),
+    )
+
+
+class CallLogs(Base):
+    __tablename__='CallLogs'
+
+    call_id= Column(BigInteger, primary_key=True, autoincrement=True)
+    community_id=Column(Integer, nullable=False)
+    channel_id=Column(Integer, nullable=False)
+    call_topic=Column(String, default="Call")
+    call_starter_id=Column(Integer, ForeignKey("Users.user_id"), nullable=False)
+    call_starter_name=Column(String, nullable=False)
+    started_at=Column(DateTime(timezone=True))
+    ended_at=Column(DateTime(timezone=True))
+    call_participants=Column(JSON)
 
     __table_args__=(
         ForeignKeyConstraint(

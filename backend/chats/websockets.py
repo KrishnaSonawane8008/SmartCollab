@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 import asyncio
 from utilities.colour_print import Print
 import json
@@ -6,9 +6,16 @@ from chats.WSClient import WSClient
 import core
 import sys
 from datetime import datetime, timezone
+from auth.dependencies import token_verification
+from sqlalchemy import select
+from database_models import Channel_Members
+from sqlalchemy.orm import Session
+from DB_Manipulation.dependencies import get_db
+from utilities.db_utilities import parse_access_token
 
 
 router=APIRouter()
+ws_auth_router=APIRouter()
 
 
 
@@ -97,18 +104,18 @@ class ConnectionManager:
         self.active_connections[websocket.state.user_id]=wsClient
 
 
-    async def store_in_room(self, websocket:WebSocket, community_id:str, channel_id:str):
+    async def store_in_room(self, user_id:str, community_id:str, channel_id:str):
         if self.Rooms.get(f"{community_id}{channel_id}") is None:
             self.Rooms[f"{community_id}{channel_id}"]=[]
 
-        if websocket.state.user_id not in self.Rooms[f"{community_id}{channel_id}"]:
-            self.Rooms[f"{community_id}{channel_id}"].append(websocket.state.user_id)
+        if user_id not in self.Rooms[f"{community_id}{channel_id}"]:
+            self.Rooms[f"{community_id}{channel_id}"].append(user_id)
 
-        if self.connection_Rooms.get(websocket.state.user_id) is None:
-            self.connection_Rooms[websocket.state.user_id]=[]
+        if self.connection_Rooms.get(user_id) is None:
+            self.connection_Rooms[user_id]=[]
         
-        if f"{community_id}{channel_id}" not in self.connection_Rooms[websocket.state.user_id]:
-            self.connection_Rooms[websocket.state.user_id]=f"{community_id}{channel_id}"
+        if f"{community_id}{channel_id}" not in self.connection_Rooms[user_id]:
+            self.connection_Rooms[user_id]=f"{community_id}{channel_id}"
 
 
     def disconnect(self, websocket: WebSocket):
@@ -156,21 +163,29 @@ async def receiver(ws: WebSocket):
     while True:
         data:dict=await ws.receive_json(mode="text")
         if data.get("type") is None:
+            Print.red("WS message should contain a type prop")
             pass
         else:
             message_type=data["type"]
             if message_type=="Room":
                 Print.yellow(f"from UserId {ws.state.user_id}: {data}")
-                await manager.store_in_room(websocket=ws, community_id=data["communityId"], channel_id=data["channelId"])
+                await manager.store_in_room(user_id=ws.state.user_id, community_id=data["communityId"], channel_id=data["channelId"])
             
             if message_type=="Community_Invite":
                 Print.yellow(f"from UserId {ws.state.user_id}: {data}")
                 await core.async_redis_api.redis_client.lpush(f"Notifications:{ws.state.user_id}", json.dumps(new_message))
 
             if message_type=="Channel_Invite":
-                Print.yellow(f"from UserId {ws.state.user_id}: {data}")
-                await core.async_redis_api.redis_client.lpush(f"Notifications:{ws.state.user_id}", json.dumps(new_message))
-            
+                reiever_id=data.get("reciever_id")
+                if reiever_id is not None:
+                    reciever=manager.active_connections.get(str(reiever_id))
+                    
+                    if reciever is not None:
+                        reciever.send_queue.put_nowait(data)
+                        Print.green(f"from UserId {ws.state.user_id}: {data}")
+                else:
+                    Print.red("Invite RecieverId not present")
+
             if message_type=="message":
                 new_message=get_message_correct_format(data=data, uid=ws.state.user_id, user_name=ws.state.user_name)
                 if new_message is not None:
@@ -223,3 +238,28 @@ async def websocket_test(websocket: WebSocket):
         if receiver_task:
             receiver_task.cancel()
         print("cleanup done")
+
+
+
+@ws_auth_router.get("/authenticate")
+async def Authenticate_WS_Connection(access_token: str=Depends(token_verification), db:Session=Depends(get_db)):
+    uid=parse_access_token(access_token=access_token)
+    query=select(Channel_Members.community_id, Channel_Members.channel_id).where( Channel_Members.user_id==uid )
+    All_Rooms=db.execute(query).all()
+
+    ongoing_videocalls={}
+    
+    for room in All_Rooms:
+        if ongoing_videocalls.get(room[0]) is None:
+            redis_client=core.async_redis_api.redis_client
+            present_sets=[]
+            async for key in redis_client.scan_iter(match=f"videocall:{room[0]}:*"):
+                set_data=await redis_client.get(key)
+                present_sets.append(set_data)
+            ongoing_videocalls[room[0]]=present_sets
+
+        await manager.store_in_room(user_id=str(uid), community_id=str(room[0]), channel_id=str(room[1]))
+
+    # Print.green(ongoing_videocalls)
+    
+    return {"Success":True, "OngoingCalls":ongoing_videocalls}

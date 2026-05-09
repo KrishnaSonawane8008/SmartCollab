@@ -67,13 +67,16 @@ const ChatMessagesSection = () => {
 
 
   useEffect(()=>{
-
+    let cleanup_subscribe=null
     if(wsClient && communityId && channelId){
-      console.log("subscribing")
-      wsClient.subscribe("session_messages", update_message_list)
+      cleanup_subscribe=wsClient.subscribe("message", update_message_list)
     }
     
-    
+    return ()=>{
+      if(cleanup_subscribe){
+        cleanup_subscribe()
+      }
+    }
   },[communityId, channelId])
 
   useEffect(()=>{
@@ -97,11 +100,11 @@ const ChatMessagesSection = () => {
         'communityId': communityId, 
         'channelId': channelId, 
         "message":value})
-    console.log("message Sent: ", value)
   }
 
   let prev_sent_date=" "
   let date_change=false
+  let last_message_id=null
 
   if(isError){
     throw error
@@ -109,7 +112,7 @@ const ChatMessagesSection = () => {
 
   if (isFetching) {
     return (
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full bg-[#F5F3EF] flex flex-col">
         <ChatHeader />
         <div className="flex-1 bg-[#F5F3EF] flex justify-center items-center">
           <div className="w-6 h-6 border-2 border-[#2F5D50]/20 border-t-[#2F5D50] rounded-full animate-spin" />
@@ -120,11 +123,7 @@ const ChatMessagesSection = () => {
   }
 
   return (
-  
-
-    
-
-     <div className="chat-section bg-transparent w-full">
+     <div className="chat-section bg-[#F5F3EF] w-full ">
       <div className="w-full flex-shrink-0 relative">
         <ChatHeader queryClient={queryClient} />
       </div>
@@ -147,8 +146,14 @@ const ChatMessagesSection = () => {
                     }else{
                       date_change=false
                     }
+                if(msg.message_id){
+                  last_message_id=msg.message_id
+                }
+                
+                const component_key= `${i}-${communityId}-${channelId}-${last_message_id}-${LanguageChanged}`
+                // console.log(msg, CurrentSentDate)
                 return (
-                  <div key={`${i}-${LanguageChanged}`} >
+                  <div key={component_key} >
                     {date_change && prev_sent_date && (
                       <div className="text-[var(--sc-on-surface-muted)] py-4 w-full flex justify-center text-xs font-medium">
                         <div className="bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20">
@@ -159,6 +164,7 @@ const ChatMessagesSection = () => {
                     <TextBox
                       fromUser={msg.sender_id == "user"}
                       message={msg.message}
+                      unique_id={component_key}
                       sender_id={msg.sender_id}
                       sender_name={msg.sender_name}
                       sent_at={msg.sent_at}

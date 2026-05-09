@@ -1,0 +1,232 @@
+algorithm algorithm forest <<>>    "एल्गोरिदम एल्गोरिदम वन <<>> 
+algorithm algorithm algorithm <<>>    एल्गोरिदम एल्गोरिदम एल्गोरिदम <<>> 
+algorithm forest forest <<>>    
+algorithm forest algorithm <<>>    एल्गोरिदम वन एल्गोरिदम <<>> 
+algorithm developer forest <<>>    
+algorithm developer algorithm <<>>    एल्गोरिदम वन एल्गोरिदम <<>> 
+developer algorithm forest <<>>    डेवलपर एल्गोरिदम वन <<>> 
+developer algorithm algorithm <<>>    डेवलपर एल्गोरिदम एल्गोरिदम <<>> 
+developer forest forest <<>>    डेवलपर फॉरेस्ट फॉरेस्ट <<>> 
+developer forest algorithm <<>>    
+developer developer forest <<>>    डेवलपर डेवलपर फॉरेस्ट <<>> 
+developer developer algorithm <<>>    डेवलपर डेवलपर एल्गोरिदम <<>> 
+forest algorithm forest <<>>    फॉरेस्ट एल्गोरिदम फॉरेस्ट <<>> 
+forest algorithm algorithm <<>>    फॉरेस्ट एल्गोरिदम एल्गोरिदम <<>> 
+forest forest forest <<>>    ///
+forest forest algorithm <<>>    फॉरेस्ट फॉरेस्ट एल्गोरिदम <<>> 
+forest developer forest <<>>  ///  
+forest developer algorithm <<>>  फ़ॉरेस्ट डेवलपर एल्गोरिदम <<>> 
+
+
+
+
+hi <<>>    
+asfasf <<>>    
+hello <<>>    
+apple <<>>    
+kill me <<>>    
+kya kar rahe ho <<>>    
+kya kar rahe ho <<>>    
+kya <<>>    
+what are you doing <<>>    
+kyu <<>>    
+kyu <<>>    
+hello how are you today. Im feeling fine. <<>>    
+hello what even are you how do you see the sky <<>>    
+hello <<>>    
+why <<>>    
+why are you like this <<>>    
+who are you <<>>    
+why <<>>    
+hi <<>>    
+why <<>>    
+hi <<>>    
+how <<>>    
+who <<>>    
+which <<>>    
+who <<>>    
+whomw <<>>    
+which <<>>    
+hello <<>>    
+hello <<>>    
+why <<>>    
+mess <<>>    
+which <<>>    
+how <<>>    
+who <<>>    
+what <<>>    
+hello   
+
+
+"एल्गोरिदम एल्गोरिदम वन <<>> 
+एल्गोरिदम एल्गोरिदम एल्गोरिदम <<>> 
+एल्गोरिदम वन एल्गोरिदम <<>> 
+एल्गोरिदम डेवलपर एल्गोरिदम <<>> 
+डेवलपर एल्गोरिदम वन <<>> 
+डेवलपर एल्गोरिदम एल्गोरिदम <<>> 
+डेवलपर फॉरेस्ट फॉरेस्ट <<>> 
+डेवलपर एल्गोरिदम एल्गोरिदम <<>> ??
+डेवलपर डेवलपर फॉरेस्ट <<>> 
+डेवलपर डेवलपर एल्गोरिदम <<>> 
+फॉरेस्ट एल्गोरिदम फॉरेस्ट <<>> 
+फॉरेस्ट एल्गोरिदम एल्गोरिदम <<>> 
+फॉरेस्ट फॉरेस्ट एल्गोरिदम <<>> 
+फॉरेस्ट फॉरेस्ट एल्गोरिदम <<>> ??
+फॉरेस्ट फॉरेस्ट एल्गोरिदम <<>> ??
+फ़ॉरेस्ट डेवलपर एल्गोरिदम <<>> 
+
+
+
+
+हाय <<>> 
+asfasf <<>> 
+हैलो <<>> 
+Apple <<>> 
+मुझे मार डालो <<>> 
+क्या कर रहे हो <<>> 
+क्या कर रहे हो <<>> 
+क्या <<>> 
+आप क्या कर रहे हैं <<>> 
+kyu <<>> 
+kyu <<>> 
+नमस्ते आप आज कैसे हैं। मैं ठीक महसूस कर रहा हूं. <<>> 
+नमस्ते आप भी क्या हैं \nआप आकाश को कैसे देखते हैं <<>> 
+नमस्ते <<>> 
+क्यों <<>> 
+आप ऐसे क्यों हैं <<>> 
+आप कौन हैं <<>> 
+क्यों <<>> 
+हाय <<>> 
+क्यों <<>> 
+हाय <<>> 
+कैसे <<>> 
+कौन <<>> 
+कौन सा <<>> 
+कौन <<>> 
+किसको <<>> 
+कौन सा <<>> 
+नमस्ते <<>> 
+नमस्ते <<>> 
+क्यों <<>> 
+गड़बड़ <<>> 
+जो <<>> 
+कैसे <<>> 
+कौन <<>> 
+क्या <<>> 
+नमस्ते"
+
+============================================================================================
+
+
+##0## algorithm algorithm forest 
+##1## algorithm algorithm algorithm 
+##2## algorithm forest forest 
+##3## algorithm forest algorithm 
+##4## algorithm developer forest 
+##5## algorithm developer algorithm 
+##6## developer algorithm forest 
+##7## developer algorithm algorithm 
+##8## developer forest forest 
+##9## developer forest algorithm 
+##10## developer developer forest 
+##11## developer developer algorithm 
+##12## forest algorithm forest 
+##13## forest algorithm algorithm 
+##14## forest forest forest 
+##15## forest forest algorithm 
+##16## forest developer forest 
+##17## forest developer algorithm 
+##18## hi 
+##19## asfasf 
+##20## hello 
+##21## apple 
+##22## kill me 
+##23## kya kar rahe ho 
+##24## kya kar rahe ho 
+##25## kya 
+##26## what are you doing 
+##27## kyu 
+##28## kyu 
+##29## hello how are you today. Im feeling fine. 
+##30## hello what even are you \n how do you see the sky 
+##31## hello 
+##32## why 
+##33## why are you like this 
+##34## who are you 
+##35## why 
+##36## hi 
+##37## why 
+##38## hi 
+##39## how 
+##40## who 
+##41## which 
+##42## who 
+##43## whomw 
+##44## which 
+##45## hello 
+##46## hello 
+##47## why 
+##48## mess 
+##49## which 
+##50## how 
+##51## who 
+##52## what 
+##53## hello
+
+
+
+
+##0## एल्गोरिदम एल्गोरिदम वन 
+##1## एल्गोरिदम एल्गोरिदम एल्गोरिदम 
+##2## एल्गोरिदम वन फॉरेस्ट 
+##3## एल्गोरिदम फॉरेस्ट एल्गोरिदम 
+##4## एल्गोरिदम डेवलपर फॉरेस्ट 
+##5## एल्गोरिदम डेवलपर एल्गोरिदम 
+##6## डेवलपर एल्गोरिदम फॉरेस्ट 
+##7## डेवलपर एल्गोरिदम एल्गोरिदम 
+##8## डेवलपर फॉरेस्ट फॉरेस्ट 
+##9## डेवलपर फॉरेस्ट एल्गोरिदम 
+##10## डेवलपर डेवलपर फॉरेस्ट 
+##11## डेवलपर डेवलपर एल्गोरिदम 
+##12## फॉरेस्ट एल्गोरिदम फॉरेस्ट 
+##13## फॉरेस्ट एल्गोरिदम एल्गोरिदम 
+##14## फॉरेस्ट फॉरेस्ट फॉरेस्ट 
+##15## फॉरेस्ट फॉरेस्ट एल्गोरिदम 
+##16## वन डेवलपर वन 
+##17## वन डेवलपर एल्गोरिदम 
+##18## हाय 
+##19## asfasf 
+##20## हैलो 
+##21## सेब 
+##22## मुझे मार डालो 
+##23## क्या कर रहे हो 
+##24## क्या कर रहे हो 
+##25## क्या 
+##26## क्या कर रहे हो 
+##27## क्यू 
+##28## क्यू 
+##29## हेलो कैसे हैं आप आज. मैं ठीक महसूस कर रहा हूं. 
+##30## हैलो तुम भी क्या हो \n आप आकाश को कैसे देखते हैं 
+##31## हेलो 
+##32## क्यों 
+##33## आप ऐसे क्यों हैं 
+##34## आप कौन हैं 
+##35## क्यों 
+##36## हाय 
+##37## क्यों 
+##38## हाय 
+##39## कैसे 
+##40## कौन 
+##41# कौन 
+##42## कौन 
+##43## किसको 
+##44## कौन 
+##45## नमस्ते 
+##46## नमस्ते 
+##47## क्यों 
+##48## गड़बड़ 
+##49## कौन सा 
+##50## कैसे 
+##51## कौन 
+##52## क्या 
+##53## नमस्ते

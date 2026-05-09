@@ -2,15 +2,16 @@ import { useRef, useContext, useEffect, useState } from "react"
 import UserProfile from "./GroupBar Components/UserProfile"
 import CommunityTab from "./GroupBar Components/CommunityTab"
 import ScrollBar from "../../common components/ScrollBar"
-import { Sun, Moon, Plus, PlusIcon, SearchIcon } from "lucide-react"
+import { Sun, Moon, Plus, PlusIcon, SearchIcon, Bell } from "lucide-react"
 import { Global_Context } from "../../../contexts/Global-context-provider"
 import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provider"
 import FloatingDiv from "../../common components/FloatingDiv"
 import CenterFloatingDiv from "../../common components/CenterFloatingDiv"
 import { create_community } from "../../../services/community_services"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import {get_communities} from "../../../services/user_services"
 import { search_communities, join_community } from "../../../services/community_services"
+import { wsClient } from "../../../api/websocket"
 
 const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoinedCommunity, setShowSearchCommunity})=>{
   
@@ -86,6 +87,12 @@ const SearchCommunities=({already_joined_communities, JoinedCommunity, setJoined
                         onClick={()=>{
                           join_community(value.community_id).then((response)=>{
                             if(response.Success===true){
+                              try{
+                                wsClient.reconnect()
+                              }catch(e){
+                                window.location.reload()
+                                console.error(e)
+                              }
                               navigate(`/chats/${response.NewCommId}`)
                               setJoinedCommunity(!JoinedCommunity)
                             }
@@ -155,8 +162,15 @@ const CreateCommunity=({AddedCommunity, setAddedCommunity, setShowCreateCommunit
               setInputString('')
               create_community(InputString).then((response)=>{
                 if(response.Success==true){
+                  try{
+                    wsClient.reconnect()
+                  }catch(e){
+                    window.location.reload()
+                    console.error(e)
+                  }
                   navigate(`/chats/${response.NewCommId}`)
                   setAddedCommunity(!AddedCommunity)
+                  setShowCreateCommunity(false)
                   console.log("Community Created")
                 }
               }).catch((error)=>{
@@ -175,24 +189,58 @@ const CreateCommunity=({AddedCommunity, setAddedCommunity, setShowCreateCommunit
 }
 
 
+const NotificationsTab=()=>{
+
+  const location=useLocation()
+  const navigate=useNavigate()
+  const isActive = location.pathname==="/chats/notifications"
+
+  return(
+    <div className={`w-[44px] h-[44px] my-1 flex-shrink-0 rounded-[16px] flex items-center justify-center backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group ${isActive ? 'bg-[#E8E4DE]' : 'bg-[#2F5D50]'} `}                     
+      
+      title="Notifications"
+      onClick={()=>{
+        navigate(`/chats/notifications`)
+      }}
+      >
+
+        <Bell className={`w-[20px] h-[20px] flex-shrink-0 
+        ${isActive? 
+          "text-gray-600":
+          "text-[#DDE6E0] group-hover:text-white"}
+        transition-colors`} strokeWidth={2} />
+
+      </div>
+  )
+}
+
 
 const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
   const scrollbarRef = useRef(null)
   const [communities, setUserCommunities]=useState(null)
   const [AddedCommunity, setAddedCommunity]=useState(false)
-  const [JoinedCommunity, setJoinedCommunity]=useState(false)
 
   const { theme, toggleTheme } = useContext(Global_Context)
-  const {LeftCommunityRender}=useContext(ChatLayout_Context)
+  const {LeftCommunityRender, setCommunityChannelInfo, JoinedCommunity, setJoinedCommunity}=useContext(ChatLayout_Context)
 
   const [ShowCreateCommunity, setShowCreateCommunity]=useState(false)
   const [ShowSearchCommunity, setShowSearchCommunity]=useState(false)
+
 
   useEffect(()=>{
     get_communities().then(
             (comms)=>{
                 // console.log("fetched communities: ",comms.UserCommunities)
                 setUserCommunities(comms.UserCommunities)
+                const community_entries={}
+                for(const comm of comms.UserCommunities){
+                  community_entries[comm.community_id]={ 
+                                        community_name:comm.community_name,
+                                        channels:{}
+                                      }
+                }
+
+                setCommunityChannelInfo({...community_entries})
             }
         ).catch((e)=>{
             console.log("Error getting communities: ")
@@ -204,7 +252,7 @@ const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
 
   return (
   
-    <div className="w-full flex flex-col items-center gap-[12px] pb-4 h-full overflow-hidden">
+    <div className="w-full flex flex-col items-center h-full overflow-hidden">
 
       <div className="w-[44px] h-[44px] flex-shrink-0 rounded-[14px] flex items-center justify-center bg-transparent hover:bg-[rgba(255,255,255,0.08)] hover:scale-105 active:bg-[#E6D3B3] active:shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-250 cursor-pointer group" title="Search Communities" >
         <svg className="w-[20px] h-[20px] fill-[#DDE6E0] group-hover:fill-white group-active:fill-[#1F4D3A] transition-colors" viewBox="0 0 24 24">
@@ -217,7 +265,7 @@ const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
 
       <FloatingDiv
         ToggleButtonComponent={() => (
-          <div className="w-[44px] h-[44px] flex-shrink-0 rounded-[16px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group" title="Add Community">
+          <div className="w-[44px] h-[44px] my-1 flex-shrink-0 rounded-[16px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group" title="Add Community">
             <Plus className="w-[20px] h-[20px] flex-shrink-0 text-[#DDE6E0] group-hover:text-white transition-colors" strokeWidth={2} />
           </div>
         )}
@@ -247,10 +295,13 @@ const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
         </div>
       </FloatingDiv>
       
+      {/* Notifications Icon */}
+      <NotificationsTab/>
+
       {/* Sidebar Channel Toggle Button */}
       <button 
         onClick={() => setChannelOpen(prev => !prev)}
-        className="w-[44px] h-[44px] flex-shrink-0 rounded-[14px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group"
+        className="w-[44px] h-[44px] flex-shrink-0 my-1 rounded-[14px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group"
         title="Toggle Channels"
       >
         <div className="text-[#DDE6E0] group-hover:text-white transition-colors">
@@ -263,12 +314,12 @@ const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
       </button>
 
       {/* Divider */}
-      <div className="w-6 h-px bg-white/20 mt-2 mb-2 flex-shrink-0" />
+      <div className="w-6 h-px bg-white/20 my-2 flex-shrink-0" />
 
       {/* Community list */}
       <div className="flex-1 w-full min-h-0 overflow-hidden">
         <ScrollBar ref={scrollbarRef}>
-          <div className="flex flex-col items-center gap-[12px] w-full">
+          <div className="flex flex-col items-center w-full">
             { communities && 
               communities.map((community, index) => (
               <CommunityTab
@@ -291,20 +342,20 @@ const GroupBar = ({ username, email, channelOpen, setChannelOpen }) => {
 
       {/* Modals */}
       {ShowCreateCommunity && (
-        <CreateCommunity
-          AddedCommunity={AddedCommunity}
-          setAddedCommunity={setAddedCommunity}
-          setShowCreateCommunity={setShowCreateCommunity}
-        />
+          <CreateCommunity
+            AddedCommunity={AddedCommunity}
+            setAddedCommunity={setAddedCommunity}
+            setShowCreateCommunity={setShowCreateCommunity}
+          />
       )}
       
       {ShowSearchCommunity && (
-        <SearchCommunities
-          already_joined_communities={communities}
-          JoinedCommunity={JoinedCommunity}
-          setJoinedCommunity={setJoinedCommunity}
-          setShowSearchCommunity={setShowSearchCommunity}
-        />
+          <SearchCommunities
+            already_joined_communities={communities}
+            JoinedCommunity={JoinedCommunity}
+            setJoinedCommunity={setJoinedCommunity}
+            setShowSearchCommunity={setShowSearchCommunity}
+          />
       )}
     </div>
 

@@ -124,6 +124,19 @@ body {
   border-radius: 10px;
 }
 
+
+.custom-scrollbar-horizontal::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+
+.scrolllbar-wrapper:has(.simplebar-content) .simplebar-content {
+  height: 100%;
+}
+
 /* ─── SimpleBar (keep for chat) ──────────────────────────────── */
 .simplebar-scrollbar::before {
   background-color: var(--sc-outline-variant) !important;

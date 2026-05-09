@@ -1,11 +1,10 @@
 import { Search } from 'lucide-react'
-import { useContext, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChatLayout_Context } from "../../../contexts/ChatLayout-context-provider"
 import { search_channels, join_channel } from '../../../services/channel_services'
+import { wsClient } from '../../../api/websocket'
 
 const SearchBar = ({joined_Channels, refetchChannels}) => {
-  const { CommunityChannels } = useContext(ChatLayout_Context)
   const {communityId}=useParams()
   const [query, setQuery] = useState("");
   const navigate=useNavigate()
@@ -76,6 +75,12 @@ const SearchBar = ({joined_Channels, refetchChannels}) => {
                       Empty_Input()
                       join_channel(value.community_id, value.channel_id).then((response)=>{
                         if(response.Success===true){
+                          try{
+                            wsClient.reconnect()
+                          }catch(e){
+                            window.location.reload()
+                            console.error(e)
+                          }
                           navigate(`/chats/${value.community_id}/${value.channel_id}`)
                           refetchChannels()
                         }

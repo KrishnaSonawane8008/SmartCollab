@@ -9,6 +9,8 @@ from RequestModels import user_credentials
 from DB_Manipulation.user_operations import get_user_with_email, add_as_new_user, update_user_auth_info
 from DB_Manipulation.auth_operations import set_access_token, delete_access_token
 from auth.dependencies import token_verification
+from auth.dependencies import sfu_key_verification
+from communities.dependencies import isUserAuthorized
 
 from utilities.colour_print import Print
 from utilities.db_utilities import parse_access_token
@@ -124,3 +126,30 @@ def logout_user(response: Response, token: str=Depends(token_verification), db:S
         return {"Logout":"Failed"}
     
     return {"Logout":"Success"}
+
+
+@router.get("/{communityId}/{channelId}/isauthorized")
+def is_user_authorized(communityId:int, channelId:int ,token: str=Depends(token_verification), db:Session = Depends(get_db)):
+    uid=parse_access_token(access_token=token)
+    isAuthorized=isUserAuthorized(uid=uid, community_id=communityId, session=db, channel_id=channelId)
+    if isAuthorized==False:
+        Print.red(f"USER {uid} IS NOT AUTHORIZED TO ACCESS CHANNEL {channelId} OF COMMUNITY {communityId}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="user not authorized to access channel of this community"
+        )
+    
+    return {"Success":True}
+
+
+@router.get("/{uid}/{communityId}/{channelId}/sfu_authorization")
+def is_sfu_user_authorized(uid:int, communityId:int, channelId:int, isAuthorized=Depends(sfu_key_verification), db:Session = Depends(get_db)):
+    isAuthorized=isUserAuthorized(uid=uid, community_id=communityId, session=db, channel_id=channelId)
+    if isAuthorized==False:
+        Print.red(f"USER {uid} IS NOT AUTHORIZED TO ACCESS CHANNEL {channelId} OF COMMUNITY {communityId}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="user not authorized to access channel of this community"
+        )
+    
+    return {"Success":True}

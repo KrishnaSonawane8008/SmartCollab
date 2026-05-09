@@ -28,6 +28,13 @@ def create_community(comm_name:str, session:Session)->Community:
     return new_Community
 
 
+def Is_Community_Member(community_id:int, uid:int, session:Session)->None|Community_Members:
+    query=select(Community_Members).where(Community_Members.community_id==community_id, Community_Members.user_id==uid)
+    result=session.execute(query).scalar()
+
+    return result
+
+
 def Add_Community_Member(community:Community, user:User, role:str,session:Session)->Community_Member:
     new_communityMember=Community_Member(
         user_id=user.user_id, 

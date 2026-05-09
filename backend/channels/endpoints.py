@@ -9,6 +9,7 @@ import core
 from utilities.colour_print import Print
 from DB_Manipulation.channel_operations import get_channel_messages, create_Channel, Add_Channel_Member, get_Channle_Members, Remove_Channel, Remove_All_ChannelMessages, Remove_Channel_Member, get_channel
 from DB_Manipulation.user_operations import get_user_with_uid
+from DB_Manipulation.community_operations import Is_Community_Member, Add_Community_Member, get_Community
 from RequestModels import channel_info_create, channel_search, channel_info_join
 from database_models import Channels
 import json
@@ -89,17 +90,26 @@ def join_channel(communityId:int,channelId:int, access_token: str=Depends(token_
     user=get_user_with_uid(session=db, uid=uid)
     Channel_to_be_joined=None
     newChannelMember=None
-    
+    community=get_Community(comm_id=communityId, session=db)
+    isMember=Is_Community_Member(community_id=communityId, uid=uid, session=db)
+    if isMember is None:
+        try:
+            Add_Community_Member(community=community, user=user, role="member", session=db)
+        except Exception as e:
+            Print.red(f'Error while adding community member: {e}')
+            return {"Success":False}
+
+        
     try:
         Channel_to_be_joined=get_channel(comm_id=communityId, channel_id=channelId, session=db)
 
         newChannelMember=Add_Channel_Member(channel=Channel_to_be_joined, user=user, role="member", session=db)
         Print.green(f'Added {user.user_name} to Channel {newChannelMember.channel_name}')
     except Exception as e:
-        Print.red(f'Error while creating channel: {e}')
+        Print.red(f'Error while joining channel: {e}')
 
     if Channel_to_be_joined is not None:
-        return {"Success":True if Channel_to_be_joined is not None else False, "NewChannelId":Channel_to_be_joined.channel_id, "NewChannelName":Channel_to_be_joined.channel_name }
+        return {"Success":True, "NewChannelId":Channel_to_be_joined.channel_id, "NewChannelName":Channel_to_be_joined.channel_name }
     else:
         return {"Success":False}
 

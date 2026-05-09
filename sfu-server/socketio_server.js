@@ -1,9 +1,9 @@
 const chalk=require("chalk")
 const webrtc_funcs=require("./webrtc_functions")
 const TranscriberConnectionHandler=require("./transcriberConnectionHandler")
-
+const api_calls=require("./FastAPIServer_APICalls")
 const Rooms=new Map()
-
+const CallLogData=new Map()
 
 function initialize_socketio_Server(allowed_origins, server){
     const io=require("socket.io")(server, {
@@ -11,6 +11,55 @@ function initialize_socketio_Server(allowed_origins, server){
             origin: "*"
         }
     })
+
+    function cleanup(socket){
+        const joined_rooms=Array.from(socket.rooms).filter(
+                                (item) => item !== socket.id
+                            );
+
+        for(const roomid of joined_rooms){
+            const room=Rooms.get(roomid)
+            if(room){
+                const {peers, producers, consumers}=room
+                const peer=peers.get(socket.id)
+                if(peer){
+                    peer.sendTransport?.close()
+                    peer.recvTransport?.close()
+                    for(const producerId of peer.producerIds){
+                        const producer=producers.get(producerId)
+                        if(producer){
+                            // console.log(chalk.yellow(`${socket.id}: producer with prod_id ${producerId} closed`))
+                            producer.close()
+                            producers.delete(producerId)
+                        }
+                    }
+                    for(const consumerId of peer.consumerIds){
+                        const consumer=consumers.get(consumerId)
+                        if(consumer){
+                            consumer.close()
+                            consumers.delete(consumerId)
+                        }
+                    }
+                    io.in(roomid).emit("closeConsumers",{producerIds: peer.producerIds})
+
+                    peers.delete(socket.id)
+                    if(peers.size==0){
+                        const log=CallLogData.get(roomid)
+                        if(log){
+                            log.ended_at=Date.now()
+
+                            TranscriberConnectionHandler.callEnded(roomid, {...log})
+
+                            CallLogData.delete(roomid)
+                        }
+
+                        Rooms.delete(roomid)
+                        console.log(chalk.magenta(`deleted room ${roomid}`))
+                    }
+                }
+            }
+        }
+    }
 
     io.on('connection', (socket) => {
         console.log(chalk.green(`client ${socket.id} connected to sfu`))
@@ -21,42 +70,8 @@ function initialize_socketio_Server(allowed_origins, server){
         })
 
         socket.on('disconnecting', () => {
-            const joined_rooms=Array.from(socket.rooms).filter(
-                                    (item) => item !== socket.id
-                                );
-            for(const roomid of joined_rooms){
-                const room=Rooms.get(roomid)
-                if(room){
-                    const {peers, producers, consumers}=room
-                    const peer=peers.get(socket.id)
-                    if(peer){
-                        peer.sendTransport.close()
-                        peer.recvTransport.close()
-                        for(const producerId of peer.producerIds){
-                            const producer=producers.get(producerId)
-                            if(producer){
-                                // console.log(chalk.yellow(`${socket.id}: producer with prod_id ${producerId} closed`))
-                                producer.close()
-                                producers.delete(producerId)
-                            }
-                        }
-                        for(const consumerId of peer.consumerIds){
-                            const consumer=consumers.get(consumerId)
-                            if(consumer){
-                                consumer.close()
-                                consumers.delete(consumerId)
-                            }
-                        }
-                        io.in(roomid).emit("closeConsumers",{producerIds: peer.producerIds})
-
-                        peers.delete(socket.id)
-                        if(peers.size==0){
-                            Rooms.delete(roomid)
-                            console.log(chalk.magenta(`deleted room ${roomid}`))
-                        }
-                    }
-                }
-            }
+            
+            cleanup(socket)
 
         });
 
@@ -64,15 +79,95 @@ function initialize_socketio_Server(allowed_origins, server){
             console.log(chalk.yellow(`recieved from client:`),props)
         })
 
-        socket.on("join_room", async (props)=>{
-            const {communityId, channelId}=props
-            const {router, worker, WebRTCServer, peers}=await getOrCreateRoom(`${communityId}${channelId}`)
-            console.log(chalk.yellow(`client ${socket.id} joined room ${communityId}${channelId}`))
-            socket.join(`${communityId}${channelId}`)
-            peers.set(socket.id, {socket: socket, producerIds:[], consumerIds:[], consumed_ProducerIds:new Map(), sendTransport:null, recvTransport:null} )
-            // console.log(router.rtpCapabilities)
-            socket.emit("getRtpCapabilities", router.rtpCapabilities)
+        socket.on("start_call", async (props)=>{
+
+            // community_id=Column(Integer, nullable=False)
+            // channel_id=Column(Integer, nullable=False)
+            // call_topic=Column(String, default="Call")
+            // call_starter_id=Column(Integer, ForeignKey("Users.user_id"), nullable=False)
+            // call_starter_name=Column(String, ForeignKey("Users.user_name"), nullable=False)
+            // started_at=Column(DateTime(timezone=True))
+            // ended_at=Column(DateTime(timezone=True))
+            // call_participants=Column(JSON)
+            try{
+                const {communityId, channelId, call_topic, call_starter_id, call_starter_name}=props
+                console.log(chalk.yellow(`recieved this data from client: ${communityId}, ${channelId}, ${call_topic}, ${call_starter_id}, ${call_starter_name}`))
+
+                if(!call_starter_name){
+                    throw new Error("User Name missing")
+                }
+
+                await api_calls.is_user_authorized(call_starter_id, communityId, channelId).then(async (response)=>{
+                    if(response.Success===true){
+
+
+                        const room_already_exists=Rooms.get(`${communityId}${channelId}`)
+
+                        if(!call_topic && !room_already_exists){
+                            throw new Error("Call Topic missing")
+                        }
+                
+                        const {router, worker, WebRTCServer, peers}=await getOrCreateRoom(`${communityId}${channelId}`)
+                        socket.join(`${communityId}${channelId}`)
+                        console.log(chalk.yellow(`client ${socket.id} joined room ${communityId}${channelId}`))
+                        peers.set(socket.id, {socket: socket, producerIds:[], consumerIds:[], consumed_ProducerIds:new Map(), sendTransport:null, recvTransport:null} )
+                        
+                        if(!room_already_exists){
+                            
+                            const call_start_info={
+                                community_id:communityId,
+                                channel_id:channelId,
+                                call_topic:call_topic,
+                                call_starter_id:call_starter_id,
+                                call_starter_name:call_starter_name,
+                                started_at:Date.now()
+                            }
+
+                            await api_calls.call_started(communityId, channelId, call_start_info).then((response)=>{
+                                if(response.Success===true){
+                                    let log=CallLogData.get(`${communityId}${channelId}`)
+                                    if(!log){
+                                        CallLogData.set(`${communityId}${channelId}`, {
+                                                community_id:communityId,
+                                                channel_id:channelId,
+                                                call_topic:call_topic,
+                                                call_starter_id:call_starter_id,
+                                                call_starter_name:call_starter_name,
+                                                started_at:Date.now(),
+                                                ended_at:null,
+                                                call_participants:[call_starter_name]
+                                            }
+                                        )
+                                    }
+
+
+                                }
+                            }).catch((e)=>{
+                                throw e
+                            })
+                        }else{
+                            let log=CallLogData.get(`${communityId}${channelId}`)
+                            console.log(room_already_exists)
+                            log.call_participants.push(call_starter_name)
+                        }
+
+                        // console.log(router.rtpCapabilities)
+                        socket.emit("getRtpCapabilities", router.rtpCapabilities)
+
+                    }
+                }).catch((e)=>{
+                    throw e
+                })
+            }catch(e){
+                console.error(e)
+                // cleanup(socket)
+                socket.disconnect(true)
+            }
+
         })
+
+
+
 
         socket.on("connect-Transcriber", async (props, callback)=>{
             console.log(chalk.green(`Transcriber client with id ${socket.id} connected`))
@@ -306,6 +401,7 @@ function initialize_socketio_Server(allowed_origins, server){
                         producerId:producerid,
                         rtpCapabilities:rtpCapabilities
                     })){
+                        const producer=producers.get(producerid)
                         const consumer=await recvTransport.consume({
                                             producerId:producerid,
                                             rtpCapabilities:rtpCapabilities
@@ -339,7 +435,8 @@ function initialize_socketio_Server(allowed_origins, server){
                             consumerid: consumer.id,
                             producerid: producerid,
                             kind: consumer.kind,
-                            rtpParameters: consumer.rtpParameters
+                            rtpParameters: consumer.rtpParameters,
+                            appData:producer.appData
                         })
 
                         console.log(chalk.cyan(`${socket.id}: ${consumer.kind} Consumer Created for prod_id ${producerid}`))
@@ -385,10 +482,36 @@ async function getOrCreateRoom(room_id){
     const producers=new Map()
     const consumers=new Map()
     Rooms.set(room_id, {router, worker, WebRTCServer, peers, producers, consumers})
+    console.log(chalk.green(`Room ${room_id} created`))
     return {router, worker, WebRTCServer, peers, producers, consumers}
 
 }
 
+async function getOrCreateCallLog(communityId, channelId, call_topic, call_starter_id, call_starter_name){
+    let log=CallLogData.get(`${communityId}${channelId}`)
+    if(log) return log
+    // community_id=Column(Integer, nullable=False)
+    // channel_id=Column(Integer, nullable=False)
+    // call_topic=Column(String, default="Call")
+    // call_starter_id=Column(Integer, ForeignKey("Users.user_id"), nullable=False)
+    // call_starter_name=Column(String, ForeignKey("Users.user_name"), nullable=False)
+    // started_at=Column(DateTime(timezone=True))
+    // ended_at=Column(DateTime(timezone=True))
+    // call_participants=Column(JSON)
+    CallLogData.set(`${communityId}${channelId}`, {
+            community_id:communityId,
+            channel_id:channelId,
+            call_topic:call_topic,
+            call_starter_id:call_starter_id,
+            call_starter_name:call_starter_name,
+            started_at:Date.now(),
+            ended_at:null,
+            call_participants:[call_starter_name]
+        }
+    )
+
+    return CallLogData
+}
 
 
 function getRoomProducerIds(room_id){

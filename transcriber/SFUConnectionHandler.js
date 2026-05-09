@@ -3,6 +3,7 @@ const chalk=require('chalk').chalkStderr
 // import {io} from "socket.io-client"
 // import chalk from "chalk"
 const audioWebSocketHandler=require('./services/audio/audioWebSocketHandler')
+const { on } = require('./services/audio/audioTransformer')
 
 class SFUConnectionHandler{
     socket=null
@@ -15,13 +16,15 @@ class SFUConnectionHandler{
     Rooms=new Map()
 
     SFU_URL=null
+    Remove_Pipeline=null
     HandleRoomClose=null
     CreateChunkStoreRoom=null
     ConvertChunksToWav=null
 
-    connect=({SFU_URL, HandleRoomClose, CreateChunkStoreRoom, ConvertChunksToWav})=>{
+    connect=({SFU_URL, Remove_Pipeline, HandleRoomClose, CreateChunkStoreRoom, ConvertChunksToWav})=>{
         this.socket=io(SFU_URL,{rejectUnauthorized: false})
         this.SFU_URL=SFU_URL
+        this.Remove_Pipeline=Remove_Pipeline
         this.HandleRoomClose=HandleRoomClose
         this.CreateChunkStoreRoom=CreateChunkStoreRoom
         this.ConvertChunksToWav=ConvertChunksToWav
@@ -59,18 +62,30 @@ class SFUConnectionHandler{
                     room.delete(UserId)
                     console.log(chalk.magenta(`Removed ${UserName} from Room ${roomId}`))
                     if(room.size==0){
-                        this.Rooms.delete(roomId)
-                        this.HandleRoomClose(roomId, ssrc)
+                        this.Remove_Pipeline(ssrc)
 
-                        if(this.Rooms.size==0){
-                            if(this.ConvertChunksToWav){
-                                this.ConvertChunksToWav()
-                            }
-                        }
-                        console.log(chalk.magenta(`Deleted Room ${roomId}`))
                     }
                 }
             })
+
+            this.socket.on("transcriber-room-closed", (props)=>{
+
+                const {roomId, call_id, call_info}=props
+
+                
+                this.Rooms.delete(roomId)
+                this.HandleRoomClose(roomId, call_id)
+                
+                // if(this.Rooms.size==0){
+                //     if(this.ConvertChunksToWav){
+                //         this.ConvertChunksToWav()
+                //     }
+                // }
+                console.log(chalk.magenta(`Deleted Room ${roomId}`))
+                console.log(roomId, call_info)
+
+            })
+            
 
         })
         

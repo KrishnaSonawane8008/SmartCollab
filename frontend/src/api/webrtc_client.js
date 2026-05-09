@@ -50,7 +50,25 @@ class WebRTCAPI{
     username=null
 
 
-    connect=(commid, channelid, userid, username, setLocalStreams, setVideoStreams, setAudioStreams, setScreenShareToggle)=>{
+    mic_muted=false
+    camera_off=false
+    screen_share=false
+
+    connect=(
+        commid, 
+        channelid, 
+        userid, 
+        username, 
+        setLocalStreams, 
+        setVideoStreams, 
+        setAudioStreams, 
+        setScreenShareToggle, 
+        on_sfu_disconnect, 
+        on_sfu_reconnect_fail,
+        mic_muted,
+        camera_off,
+        screen_share
+    )=>{
         this.community_id=commid
         this.channel_id=channelid
         this.userid=userid
@@ -59,7 +77,23 @@ class WebRTCAPI{
         this.setVideoStreams=setVideoStreams
         this.setAudioStreams=setAudioStreams
         this.setScreenShareToggle=setScreenShareToggle
+        this.mic_muted=!!mic_muted 
+        this.camera_off=!!camera_off
+        this.screen_share=!!screen_share
+
         socketio_client.connect()
+
+        socketio_client.on('disconnect', (reason) => {
+            console.log(chalk.red("webrtc disconnect due to sfu disconnect"))
+            on_sfu_disconnect()
+            this.disconnect()
+        });
+
+        socketio_client.socket?.io?.on('reconnect_failed', () => {
+            console.log(chalk.red("webrtc disconnect due to sfu connection refused"))
+            on_sfu_reconnect_fail()
+            this.disconnect()
+        });
 
         socketio_client.on("getRtpCapabilities", this.get_rtpCapabilities)
 
@@ -67,6 +101,12 @@ class WebRTCAPI{
     }
 
     disconnect=()=>{
+        
+
+        this.setLocalStreams?.(new Map())
+        this.setVideoStreams?.([])
+        this.setAudioStreams?.([])
+        this.setScreenShareToggle?.(false)
         //closing all producers, consumers and transports opened during video call.
         for(const producer of this.producers.values()){
             producer.close()
@@ -116,10 +156,10 @@ class WebRTCAPI{
     get_rtpCapabilities=async (capabilities)=>{
         this.router_rtpCapabilities=capabilities
 
-        console.log(chalk.yellow("recieved rtpCapabilities: "),capabilities)
+        // console.log(chalk.yellow("recieved rtpCapabilities: "),capabilities)
         try{
             const device_rtpcap=await this.create_device(capabilities)
-            console.log(chalk.green("device rtpCapabilities: "),device_rtpcap)
+            // console.log(chalk.green("device rtpCapabilities: "),device_rtpcap)
 
             socketio_client.emit("createWebRtcTransport", {communityId:this.community_id, channelId:this.channel_id, rtpCapabilities:device_rtpcap})
 
@@ -233,7 +273,7 @@ class WebRTCAPI{
                 socketio_client.emit("connectSendTransport", 
                     {dtlsParameters}, 
                     (response)=>{
-                        console.log(chalk.magenta("Calling SendTransport Callback"))
+                        // console.log(chalk.magenta("Calling SendTransport Callback"))
                         if (response?.error) {
                             errback(response.error);
                         } else {
@@ -242,7 +282,7 @@ class WebRTCAPI{
                     })
             })
             this.sendTransport.on("connectionstatechange", (state) => {
-                console.log(chalk.magenta("Send transport state:"), state);
+                // console.log(chalk.magenta("Send transport state:"), state);
             });
 
             this.recieveTransport.on("connect", ({dtlsParameters}, callback, errback )=>{
@@ -271,7 +311,7 @@ class WebRTCAPI{
                         appData       : parameters.appData
                     },
                     (response)=>{
-                        console.log(chalk.magenta("Calling transport-produce Callback"))
+                        // console.log(chalk.magenta("Calling transport-produce Callback"))
                         if (response?.error || !response?.producerid) {
                             errback(response.error);
                         } else {
@@ -297,35 +337,35 @@ class WebRTCAPI{
                     }
                 }
                 socketio_client.emit("createConsumers", {},
-                            async (response)=>{
-                                const {consumers_props}=response
-                                
-                                const streams=[]
-                                for(const props of consumers_props){
-                                    const {consumerid, producerid, kind, rtpParameters}=props
-                                    const consumer = await this.recieveTransport.consume(
-                                        {
-                                            id            : consumerid,
-                                            producerId    : producerid,
-                                            kind          : kind,
-                                            rtpParameters : rtpParameters
-                                        });
-                                    this.consumers.set(producerid, {"consumer":consumer,"consumer_id":consumerid})
-                                    const stream=new MediaStream()
-                                    stream.addTrack(consumer.track)
-                                    streams.push(stream)
-                                    if(kind=="video"){
-                                        this.RemoteVideoStreams.set(producerid, stream)
-                                    }
-                                    if(kind=="audio"){
-                                        this.RemoteAudioStreams.set(producerid, stream)
-                                    }
-                                }
-                                
-                                this.setVideoStreams([...this.RemoteVideoStreams.values()]) 
-                                this.setAudioStreams([...this.RemoteAudioStreams.values()])
-
+                    async (response)=>{
+                        const {consumers_props}=response
+                        
+                        const streams=[]
+                        for(const props of consumers_props){
+                            const {consumerid, producerid, kind, rtpParameters}=props
+                            const consumer = await this.recieveTransport.consume(
+                                {
+                                    id            : consumerid,
+                                    producerId    : producerid,
+                                    kind          : kind,
+                                    rtpParameters : rtpParameters
+                                });
+                            this.consumers.set(producerid, {"consumer":consumer,"consumer_id":consumerid})
+                            const stream=new MediaStream()
+                            stream.addTrack(consumer.track)
+                            streams.push(stream)
+                            if(kind=="video"){
+                                this.RemoteVideoStreams.set(producerid, {stream: stream, appData:props.appData})
                             }
+                            if(kind=="audio"){
+                                this.RemoteAudioStreams.set(producerid, stream)
+                            }
+                        }
+                        
+                        this.setVideoStreams([...this.RemoteVideoStreams.values()]) 
+                        this.setAudioStreams([...this.RemoteAudioStreams.values()])
+
+                    }
                 )
             })
 
@@ -416,6 +456,8 @@ class WebRTCAPI{
             }
         )
 
+        if(!stream) return
+
         this.LocalStreams.set("screenShare",stream)
         this.setLocalStreams([...this.LocalStreams])
 
@@ -450,6 +492,7 @@ class WebRTCAPI{
         if(this.Local_Tracks.video?.enabled){
             this.Local_Tracks.video.enabled=isOff
         }
+
         const videoProducer=this.producers.get("cam_feed")
         if(isOff && videoProducer){
             await videoProducer.pause()
@@ -459,6 +502,7 @@ class WebRTCAPI{
                 isOn:false
             })
 
+            this.camera_off=isOff
             console.log(chalk.green("Camera Off"))
 
         }else if(videoProducer){
@@ -469,12 +513,14 @@ class WebRTCAPI{
                 isOn:true
             })
 
+            this.camera_off=isOff
             console.log(chalk.green("Camera On"))
 
         }
     }
 
     ToggleAudio=async (ismuted)=>{
+
         if(this.Local_Tracks.audio?.enabled){
             this.Local_Tracks.audio.enabled=ismuted
         }
@@ -488,6 +534,7 @@ class WebRTCAPI{
                 isOn:false
             })
 
+            this.mic_muted=ismuted
             console.log(chalk.green("Mic Paused"))
 
         }else if(audioProducer){
@@ -498,6 +545,7 @@ class WebRTCAPI{
                 isOn:true
             })
 
+            this.mic_muted=ismuted
             console.log(chalk.green("Mic Resumed"))
 
         }
@@ -505,8 +553,12 @@ class WebRTCAPI{
 
     async ToggleScreenShare(isStarted){
         if(isStarted===true){
+            this.screen_share=isStarted
+            console.log(chalk.magenta("Sarting Screen Share"))
             await this.create_ScreenShare_Producer()
         }else if(isStarted===false){
+            this.screen_share=isStarted
+            console.log(chalk.magenta("Stopping Screen Share"))
 
             const screenShare_producer=this.producers.get("screen_capture")
             if(screenShare_producer){

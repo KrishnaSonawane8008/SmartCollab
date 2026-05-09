@@ -1,4 +1,6 @@
+import { ws_authenticate } from "../services/user_services"
 
+const BASE_URL=import.meta.env.VITE_CHATS_WEBSOCKET_BASE_URL
 
 class WebSocketAPI{
     socket=null
@@ -21,7 +23,16 @@ class WebSocketAPI{
         this.socket.onmessage=(event)=>{
             const data= JSON.parse(event.data)
             // console.log("data recieved: ",data)
-            this.listeners.forEach((fn, key)=>{fn(data)})
+            let type=data?.type
+            if(type==="TempMessage"){ 
+                type="message" 
+            }
+            this.listeners.forEach((val, key)=>{
+                if(key===type){
+                    console.log("WS data recieved: ", data)
+                    val.callback(data, val.options)
+                }
+            })
         }
 
         this.socket.onclose=()=>{
@@ -33,12 +44,25 @@ class WebSocketAPI{
 
     disconnect(){
         this.socket?.close()
-        socket=null
-        url=null
-        listeners=new Map()
-        run_on_start=new Map()
+        this.socket=null
+        this.url=null
+        this.listeners=new Map()
+        this.run_on_start=new Map()
     }
 
+    reconnect(){
+        this.socket?.close()
+        this.socket=null
+        this.url=null
+
+        ws_authenticate().then((response)=>{
+            if(response.Success===true){
+                this.connect(`${BASE_URL}/ws/socket_test`)
+            }
+        }).catch((err)=>{
+            throw new Error(err)
+        })
+    }
 
     send(data){
         if(!this.socket || this.socket.readyState!==WebSocket.OPEN){
@@ -50,15 +74,18 @@ class WebSocketAPI{
         console.log(`Sent: ${JSON.stringify(data)} `)
     }
 
-    subscribe(key, fn){
+    subscribe(key, fn, options){
         if(!key || !fn){
             console.error(`key:${key} or function:${fn} is undefined, cannot subscribe`)
             return
         }
         console.log(`subscribed the function ${fn.name}`)
-        this.listeners.set(key, fn)
+        this.listeners.set(key, {callback:fn, options: options})
 
-        return ()=>this.listeners.delete(key)
+        return ()=>{
+            console.log(`cleaned up the function ${fn.name}`)
+            this.listeners.delete(key)
+        }
     }
 
     subscribe_initializer(key, fn){

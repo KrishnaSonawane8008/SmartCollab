@@ -6,7 +6,7 @@ const Global_ContextProvider = ({ children }) => {
 
   const [LoggedOut, setLoggedOut] = useState(false)
   const [UserData, setUserData]=useState(null)
-  const [LanguageChanged, setLanguageChanged]=useState(false)
+  const [LanguageChanged, setLanguageChanged]=useState('en')
 
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {

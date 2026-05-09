@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import List
 
 #base for each entry inside the Users table
 class User(BaseModel):
@@ -72,3 +73,49 @@ class MessageRead(BaseModel):
     channel_id:int
     message:str
     sent_at:datetime
+
+
+
+class CallLogCreate(BaseModel):
+    community_id:int
+    channel_id:int
+    call_topic:str
+    call_starter_id:int
+    call_starter_name:str
+    started_at:datetime
+    ended_at:datetime
+    call_participants:List[str]
+
+class CallLogRead(BaseModel):
+    call_id:int
+    community_id:int
+    channel_id:int
+    call_topic:str
+    call_starter_id:int
+    call_starter_name:str
+    started_at:datetime
+    ended_at:datetime
+    call_participants:List[str]
+
+
+
+#base for each entry in redis for a notification of an channel invite
+class Redis_Notification_ChannelInvite(BaseModel):
+    type:str="ChannelInvite" #Should be "ChannelInvite"
+    community_id:int #Community Id of the community that this user is being invited to
+    community_name:str
+    channel_id:int # Channeli Id of the channel that this user is being invited to
+    channel_name:str
+    inviter_id:int #userid of the user that sent the invite
+    inviter_name:str
+    inviter_email: str
+    sent_at: datetime
+
+class Redis_Notification_CommunityInvite(BaseModel):
+    type:str="CommunityInvite" #Should be "CommunityInvite"
+    community_id:int #Community Id of the community that this user is being invited to
+    community_name:str
+    inviter_id:int #userid of the user that sent the invite
+    inviter_name:str
+    inviter_email: str
+    sent_at: datetime

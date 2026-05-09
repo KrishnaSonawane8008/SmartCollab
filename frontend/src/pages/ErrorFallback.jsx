@@ -20,7 +20,7 @@ const ErrorFallback = () => {
         </p>
         <button
           onClick={() => navigate('/chats')}
-          className="bg-[var(--sc-accent)] hover:bg-[var(--sc-accent-hover)] text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="bg-[#eaeaea] hover:bg-[#eeeeee] cursor-pointer select-none text-[var(--sc-text-primary)] px-5 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           Back to Home
         </button>

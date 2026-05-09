@@ -2,12 +2,20 @@ import { useContext, useEffect, useState } from "react"
 import { translate } from "../../../services/translation_service"
 import { Loader2 } from "lucide-react"
 import { Global_Context } from "../../../contexts/Global-context-provider"
+import { useQuery } from "@tanstack/react-query"
 
-const TextBox = ({ fromUser = null, message = null, sender_id = null,sender_name=null, sent_at = null, is_new_message=null }) => {
+const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null,sender_name=null, sent_at = null, is_new_message=null }) => {
 
   const [rendered_message, setMessage]=useState(message)
-  const [translation_loading, setTranslationLoading]=useState(false)
+  // const [translation_loading, setTranslationLoading]=useState(false)
   const {UserData}=useContext(Global_Context)
+
+  const {data, isLoading, isError, error, refetch, isFetching}=useQuery({
+    queryKey: ["translated_message", message, unique_id || UserData?.preferred_language || "en"],
+    queryFn: ()=>{ return translate(message, UserData?.preferred_language || "en")},
+    enabled: !!is_new_message,
+    staleTime: Infinity
+  })
 
   const formatTime = (ts) => {
     if (!ts) return ''
@@ -40,21 +48,14 @@ const TextBox = ({ fromUser = null, message = null, sender_id = null,sender_name
   //   console.error(e)
   // })
   useEffect(()=>{
-
-    if(is_new_message===true){
-      setTranslationLoading(true)
-
-      translate(message, UserData?.preferred_language || "en").then((result)=>{
-        setMessage(result.translated)
-      }).catch((e)=>{
-        console.error(e)
-      }).finally(()=>{
-        setTranslationLoading(false)
-      })
-
+    if(!data) return
+    if(data.translated){
+      setMessage(data.translated)
+    }else{
+      setMessage(message)
     }
-
-  }, [is_new_message])
+    
+  }, [data])
   
 
 
@@ -64,8 +65,8 @@ const TextBox = ({ fromUser = null, message = null, sender_id = null,sender_name
         {fromUser ? (
           <div className="flex justify-end w-full">
             <div className="bg-[#F4E6C8] text-[#2F5D50] px-4 py-2 rounded-2xl rounded-br-none max-w-[70%] shadow-sm">
-              {
-                translation_loading===true?(
+              {isError?(<>{message}</>):
+                isFetching?(
                   <div className="flex flex-row items-center">
                   <Loader2 className=" animate-spin size-3 m-1"/>
                   {rendered_message}
@@ -89,7 +90,7 @@ const TextBox = ({ fromUser = null, message = null, sender_id = null,sender_name
               </div>
 
               {
-                translation_loading===true?(
+                isFetching?(
                   <div className="flex flex-row items-center">
                   <Loader2 className=" animate-spin size-3 m-1"/>
                   {rendered_message}

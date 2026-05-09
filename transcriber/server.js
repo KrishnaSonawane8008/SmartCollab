@@ -20,6 +20,7 @@ const { default: chalk } = require('chalk');
 
 SFUConnectionHandler.connect({
                                 SFU_URL:SFU_URL, 
+                                Remove_Pipeline,
                                 HandleRoomClose, 
                                 CreateChunkStoreRoom
                               })
@@ -82,16 +83,18 @@ setInterval(() => {
   }
 }, 10);// call every 10ms
 
-
-function HandleRoomClose(roomId, ssrc){
-  liveAudioService.handleRoomEnded(roomId)
+function Remove_Pipeline(ssrc){
   Pipelines.delete(ssrc)
+}
+
+function HandleRoomClose(roomId, call_id){
+  liveAudioService.handleRoomEnded(roomId)
   const files = fs.readdirSync('./storage/transcripts');
 
   const target = `${roomId}_transcript.json`;
   if (files.includes(target)) {
     const filename = `${roomId}_transcript.json`;
-    const new_file_name=`${roomId}_${Date.now()}_transcript.json`;
+    const new_file_name=`${roomId}_${call_id}_transcript.json`;
     const filePath = path.join('./storage/transcripts', filename);
     const new_filePath=path.join('./storage/transcripts', new_file_name);
     

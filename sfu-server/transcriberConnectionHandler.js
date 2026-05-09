@@ -1,4 +1,5 @@
 const webrtc_funcs=require('./webrtc_functions')
+const api_calls=require('./FastAPIServer_APICalls')
 const chalk=require('chalk')
 require("dotenv").config()
 
@@ -67,11 +68,22 @@ class TranscriberConnectionHandler{
             this.socket.emit("consumer-closed", {ssrc, roomId, UserId, UserName} )
         })
 
+
         TranscriberProps.ProducerConsumerMap.set(producerId, consumer)
         const ssrc=consumer.rtpParameters.encodings[0].ssrc;
         this.socket.emit("consumer-created", {ssrc, roomId, UserId, UserName})
     }
 
+    callEnded=async (room_id, call_info)=>{
+        await api_calls.call_ended(call_info.community_id, call_info.channel_id, call_info).then((response)=>{
+            if(response.Success===true){
+                this.socket?.emit("transcriber-room-closed", {roomId:room_id, call_id:response.Call_ID, call_info:call_info})
+            }
+        }).catch((e)=>{
+            console.error(e)
+
+        })
+    }
 
 }
 

@@ -11,13 +11,16 @@ import FloatingDiv from "../../common components/FloatingDiv"
 import { leave_community } from "../../../services/community_services"
 import { create_channel } from "../../../services/channel_services"
 import CenterFloatingDiv from "../../common components/CenterFloatingDiv"
+import { wsClient } from "../../../api/websocket"
+import chalk from "chalk"
+
 
 const OptionsBar = ({CommunityName, CommunityId, queryClient, refetchChannels}) => {
   const navigate=useNavigate()
   const [centerdivmounted, setCenterDivMounted] = useState(null)
   const [channel_name, setChannelName]=useState('')
   const [showLeaveCommunity, setShowLeaveCommunity]=useState(false)
-  const { setLeftCommunity, setLeftCommunityRender, LeftCommunityRender } = useContext(ChatLayout_Context)
+  const { setLeftCommunityRender, LeftCommunityRender, LeftCommunity_cb } = useContext(ChatLayout_Context)
   
   const ChannelNameInputUpdate=(e)=>{
     setChannelName(e.target.value)
@@ -61,7 +64,14 @@ const OptionsBar = ({CommunityName, CommunityId, queryClient, refetchChannels}) 
                     setChannelName('')
                     create_channel(CommunityId, channel_name).then((response)=>{
                       if(response.Success===true){
+                        try{
+                          wsClient.reconnect()
+                        }catch(e){
+                          window.location.reload()
+                          console.error(e)
+                        }
                         refetchChannels()
+                        setCenterDivMounted(false)
                       }
                     }).catch((e)=>{
                       console.error(e)
@@ -98,7 +108,13 @@ const OptionsBar = ({CommunityName, CommunityId, queryClient, refetchChannels}) 
                       if(CommunityId){
                         leave_community(CommunityId).then( (response)=>{
                           if(response.Success===true){
-                            setLeftCommunity(CommunityId)
+                            try{
+                              wsClient.reconnect()
+                            }catch(e){
+                              window.location.reload()
+                              console.error(e)
+                            }
+                            LeftCommunity_cb(CommunityId)
                             setLeftCommunityRender(!LeftCommunityRender)
                             queryClient.removeQueries({queryKey: ["community_channels", CommunityId]})
                             queryClient.removeQueries({queryKey: ["messages", CommunityId]})
@@ -161,13 +177,19 @@ const ChannelsPanel = () => {
   const {communityId, channelId} = useParams()
   const scrollbarRef=useRef(null)
 
-  const { setCommunityChannels, LeftChannel, LeftChannelRender } = useContext(ChatLayout_Context)
+  const { LeftChannel, LeftChannelRender, setCommunityChannelInfo } = useContext(ChatLayout_Context)
 
   const queryClient=useQueryClient()
 
   const {data, isLoading, isError, error, refetch}=useQuery({
     queryKey:["community_channels", communityId],
-    queryFn: ()=>{return get_community_channels(communityId)},
+    queryFn: ()=>{
+      const onlyDigits = (str) => /^\d+$/.test(str);
+      if(onlyDigits(communityId)){
+        return get_community_channels(communityId)
+      }
+      return "Hi"
+    },
     enabled:!!communityId,
     retry: false,
     staleTime:1000*60*5
@@ -176,7 +198,16 @@ const ChannelsPanel = () => {
 
   useEffect(()=>{
     if(!data) return
-    setCommunityChannels(data.Channels)
+    const channels_obj={}
+    for(const channel of data.Channels){
+      channels_obj[channel.channel_id]={channel_name:channel.channel_name}
+    }
+    setCommunityChannelInfo(prev=>({...prev, 
+      [data.CommunityId]:{
+        community_name:data.CommunityName,
+        channels:channels_obj
+      }
+    }))
   },[data])
 
 
@@ -232,6 +263,7 @@ const ChannelsPanel = () => {
                         <ChannelTag
                           key={channel.channel_id}
                           channel_name={channel.channel_name}
+                          community_id={communityId}
                           channel_id={channel.channel_id}
                         />
                       ))

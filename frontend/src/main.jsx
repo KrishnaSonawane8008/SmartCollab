@@ -13,6 +13,10 @@ import { WebSockets_ContextProvider } from './contexts/WebSockets-context-provid
 import { Global_ContextProvider } from './contexts/Global-context-provider'
 import VideoCallSection from './pages/Chat/VideoCallSection'
 import CallLogs from './pages/Chat/CallLogs'
+import { EmptyChatSection } from './pages/Chat/EmptyChatSection'
+import Notifications from './pages/Chat/Notifications'
+import ChatNotificationPopup from './pages/Chat/ChatNotificationPopup'
+import FloatingVideoCallWindow from './pages/Chat/FloatingVideoCallWindow'
 
 const query_client=new QueryClient()
 
@@ -34,32 +38,47 @@ const router = createBrowserRouter([
     element: <Signup />
   },
   {
-    path:"/chats/:communityId?",
+    path:"/chats",
     element:
     <QueryClientProvider client={query_client}>
         <ChatLayout_Context_Provider>
           <WebSockets_ContextProvider>
             <ChatLayout />
+            <ChatNotificationPopup />
+            <FloatingVideoCallWindow/>
           </WebSockets_ContextProvider>
         </ChatLayout_Context_Provider>
     </QueryClientProvider>
-
     ,
     errorElement:<ErrorFallback/>,
     children: [
       {
-        path: ":channelId",
+        path: "notifications",
+        element: 
+        
+          <Notifications />
+
+      },
+      {
+        path: ":communityId",
+        element: 
+        
+          <EmptyChatSection />
+
+      },
+      {
+        path: ":communityId/:channelId",
         element: 
         
           <ChatMessagesSection />
 
       },
       {
-        path:":channelId/videocall",
+        path:":communityId/:channelId/videocall",
         element: <VideoCallSection/>
       },
       {
-        path:":channelId/call_logs",
+        path:":communityId/:channelId/call_logs",
         element: <CallLogs/>
       },
     ]

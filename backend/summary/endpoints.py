@@ -20,6 +20,7 @@ async def get_room_summary(room_id: str, call_log_id:str):
 
     try:
         with open(summary_file_path, "r") as file:
+            Print.green("Summary already exists, sending pregenerated summary...")
             return json.load(file)
     except json.JSONDecodeError:
         Print.red("JSON decoding failed, generating summary instead...")
@@ -29,7 +30,7 @@ async def get_room_summary(room_id: str, call_log_id:str):
     file_path = os.path.join(TRANSCRIPTS_PATH, f"{room_id}_{call_log_id}_transcript.json")
     
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail=f"Transcript for room {room_id} not found")
+        raise HTTPException(status_code=500, detail=f"Transcript for room {room_id} not found")
 
     # read json
     with open(file_path, "r") as f:

@@ -17,7 +17,7 @@ export async function translate(text_string, target) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ text:`${text_string}`, target:`${target}` })
+                body: JSON.stringify({ text:text_string, target:`${target}` })
             }
         )
 }
@@ -33,18 +33,23 @@ export async function MessageArray_translate(messages_Array, target) {
         return messages_Array
     }
 
-    const Combined_MessagesString=messages_Array.map(obj => obj.message).join(" <<>> ")
-    
-    const translated_str=await translate(Combined_MessagesString, target)
+    // const Combined_MessagesString=messages_Array.map((obj, i) => obj.message).join(" <<>> ")
+    // const translated_str=await translate(Combined_MessagesString, target)
 
-    const translated_arr=translated_str.translated.split(" <<>> ")
+    // const translated_arr=translated_str.translated.split(" <<>> ")
 
+
+    const msg_array=messages_Array.map(obj=>obj.message)
+    const translation_response=await translate(msg_array, target)
+    const translated_array=translation_response.translated
+    // console.log(translated_array)
 
     const TranslatedArr=messages_Array.map((obj, indx)=>{
-        obj.message=translated_arr[indx]
+        obj.message=translated_array[indx]
 
         return obj
     })
+
 
     return TranslatedArr
 }

@@ -5,17 +5,45 @@ import { Global_Context } from './Global-context-provider'
 export const ChatLayout_Context=createContext(null)
 
 export const ChatLayout_Context_Provider = ({children}) => {
-    const [CurrentCommunity, setCurrentCommunity]=useState(null)
-    const [CurrentChannel, setCurrentChannel]=useState(null)
+    
     const [CommunityChannelMap, setCommunityChannelMap]=useState({})
-    const [CommunityChannels, setCommunityChannels]=useState([])
     const [user_id, setUserid]=useState(null)
     const [user_name, setUserName]=useState(null)
-    const [LeftCommunity, setLeftCommunity]=useState(null)
+
     const [LeftChannel, setLeftChannel] = useState(null)
     
     const [LeftCommunityRender, setLeftCommunityRender]=useState(false)
     const [LeftChannelRender, setLeftChannelRender] = useState(false)
+    const [JoinedCommunity, setJoinedCommunity]=useState(false)
+
+
+    const [LocalStreams, setLocalStreams]=useState(new Map())
+    const [RemoteVideoStreams, setRemoteVideoStreams]=useState([])
+    const [RemoteAudioStreams, setRemoteAudioStreams]=useState([])
+    const [ScreenShareToggle, setScreenShareToggle]=useState(false)
+
+
+    const [IncomingCall, setIncomingCall]=useState(new Map())
+    const [OngoingCalls, setOngoingCalls]=useState(new Map())
+    const [JoinedCall, setJoinedCall]=useState(null)
+
+
+    const [CurrentCommunity, setCurrentCommunity]=useState(null)
+    const [CurrentChannel, setCurrentChannel]=useState(null)
+    const [CommunityChannelInfo, setCommunityChannelInfo]=useState([])
+    // { 
+    //     commid:{
+    //         community_name:"com_name", 
+    //         channels:{ channel_id:{channel_name:"ch_name1"}, channel_id2:{channel_name:"ch_name2"},...  } 
+    //     }, 
+    //     commid2:{
+    //         community_name:"com_name2", 
+    //         channels:{ channel_id:{channel_name:"ch_name1"}, channel_id2:{channel_name:"ch_name2"},...  } 
+    //     }, 
+    //     .
+    //     .
+    //     .
+    // }
 
     const {communityId, channelId}=useParams()
 
@@ -30,20 +58,28 @@ export const ChatLayout_Context_Provider = ({children}) => {
 
     }, [communityId, channelId])
 
-    useEffect(()=>{
-        if(LeftChannel?.communityId){
-            setCommunityChannelMap( (prev)=>{
-                const {[LeftChannel?.communityId]:_, ...rest}=prev
-                return rest
-            } )
-        }else if(LeftCommunity){
-            setCommunityChannelMap( (prev)=>{
-                const {[LeftCommunity]:_, ...rest }=prev
-                return rest
-            } )
-        }
 
-    },[LeftChannel, LeftCommunity])
+    const LeftCommunity_cb=(community_id)=>{
+        setCommunityChannelInfo( (prev)=>{
+            const {[community_id]:_, ...rest }=prev
+            return rest
+        })
+
+        setCommunityChannelMap( (prev)=>{
+            const {[community_id]:_, ...rest }=prev
+            return rest
+        } )
+    }
+
+    const LeftChannel_cb=(community_id, channel_id)=>{
+        setCommunityChannelMap( (prev)=>{
+            const {[community_id]:_, ...rest}=prev
+            return rest
+        } )
+    }
+
+
+    
 
     useEffect(()=>{
         if(LoggedOut===true){
@@ -59,11 +95,21 @@ export const ChatLayout_Context_Provider = ({children}) => {
                                         CommunityChannelMap, setCommunityChannelMap,
                                         user_id, setUserid,
                                         user_name, setUserName,
-                                        setCommunityChannels, CommunityChannels,
-                                        LeftCommunity, setLeftCommunity,
-                                        LeftChannel, setLeftChannel,
                                         LeftCommunityRender, setLeftCommunityRender,
-                                        LeftChannelRender, setLeftChannelRender
+                                        LeftChannelRender, setLeftChannelRender,
+                                        CommunityChannelInfo, setCommunityChannelInfo,
+                                        LeftCommunity_cb, LeftChannel_cb,
+                                        LeftChannel, setLeftChannel,
+                                        JoinedCommunity, setJoinedCommunity,
+                                        
+                                        LocalStreams, setLocalStreams,
+                                        RemoteVideoStreams, setRemoteVideoStreams,
+                                        RemoteAudioStreams, setRemoteAudioStreams,
+                                        ScreenShareToggle, setScreenShareToggle,
+
+                                        IncomingCall, setIncomingCall,
+                                        OngoingCalls, setOngoingCalls,
+                                        JoinedCall, setJoinedCall
                                         }}>
             {children}
         </ChatLayout_Context.Provider>

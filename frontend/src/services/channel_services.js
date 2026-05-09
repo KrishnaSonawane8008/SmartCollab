@@ -20,6 +20,7 @@ export async function get_channel_messages(communityId, channelId, preferred_lan
                 }
             }
         )
+    // console.log(data)
     if(data?.Messages){
         try{
             const translated_mesages=await MessageArray_translate(data.Messages, preferred_language || "en")
@@ -97,6 +98,26 @@ export async function join_channel(communityId, channelId) {
                 headers: {
                     "Content-Type": "application/json",
                 }
+            }
+        )
+}
+
+
+export async function invite_to_channel(communityId, channelId, userid, username, email) {
+
+    return await FetchRequest(
+            BASE_URL, `/users/${communityId}/${channelId}/invite`,
+            {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user_id: userid,
+                    user_name: username,
+                    user_email: email
+                })
             }
         )
 }

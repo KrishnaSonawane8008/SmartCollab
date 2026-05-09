@@ -28,9 +28,12 @@ app.post("/translate", async (req, res) => {
     const { text, target } = req.body;
     
     const result = await translate(text, { to: target });
+    // console.log(result)
     // dummy response for now
     res.json({
-        translated: result.text
+        translated: Array.isArray(result)===true?
+          result.map(translated_obj=>translated_obj.text):
+          result.text
     });
 });
 

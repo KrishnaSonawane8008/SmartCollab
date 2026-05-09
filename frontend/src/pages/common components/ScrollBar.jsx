@@ -2,7 +2,7 @@ import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 
-const ScrollBar = forwardRef(({ children }, ref) => {
+const ScrollBar = forwardRef(({ children, styles }, ref) => {
   const scrollbarRef = useRef(null)
 
   useImperativeHandle(ref, () => ({
@@ -17,10 +17,10 @@ const ScrollBar = forwardRef(({ children }, ref) => {
   return (
     <SimpleBar
       ref={scrollbarRef}
-      className="flex-1 min-h-0 h-full"
-      style={{ height: '100%' }}
+      className={`flex-1 min-h-0 h-full ${styles}`}
+      style={{ height: '100%', width: '100%' }}
     >
-      {children}
+        {children}
     </SimpleBar>
   )
 })

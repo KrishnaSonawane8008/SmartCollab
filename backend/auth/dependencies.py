@@ -5,7 +5,13 @@ from DB_Manipulation.user_operations import get_user_auth_info
 from datetime import datetime, timezone
 from utilities.colour_print import Print
 from DB_Manipulation.dependencies import get_db
+from dotenv import load_dotenv
+import os
+# tables_to_create_on_init=[ database_models.Communties.__table__, database_models.Users.__table__ ]
 
+# database_models.Base.metadata.create_all(bind=engine, tables=tables_to_create_on_init)
+
+load_dotenv()
 
 def token_verification( Authorization: str = Header(None), db: Session = Depends(get_db) ):
     #check if the request has the Authorization header, the Authorization header contains the access token
@@ -51,3 +57,27 @@ def token_verification( Authorization: str = Header(None), db: Session = Depends
 
     #return the access token
     return token
+
+
+
+
+
+def sfu_key_verification( Authorization: str = Header(None))->bool:
+    #check if the request has the Authorization header, the Authorization header contains the access token
+    if not Authorization:
+        Print.red("AUTHORIZATION FIELD NOT PRESENT IN HEADER")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header"
+        )
+    
+    SFU_KEY=os.getenv("SFU_KEY")
+    if SFU_KEY!=Authorization:
+        Print.red("SFU KEY NOT CORRECT")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="SFU Key not correct"
+        )
+    
+
+    return True

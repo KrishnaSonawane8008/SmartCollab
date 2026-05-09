@@ -61,6 +61,7 @@ class async_RedisAPI():
             Print.red(e)
             return None
     
+    
     async def close_connection(self):
         await self.redis_client.close()
         Print.yellow("Async Redis Connection Closed")

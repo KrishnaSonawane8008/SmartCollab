@@ -5,24 +5,33 @@ const SFU_URL=import.meta.env.VITE_SFU_SERVER_PROXY_URL
 class SocketIOClient{
     socket=null
     peerid=null
-
+    sfu_socket_connected=false
     on_recieve_callbacks=[]
 
     connect(){
-        this.socket=io()
+        this.socket=io(SFU_URL, {
+            reconnection: true,
+            reconnectionAttempts: 3,
+            reconnectionDelayMax: 5000,    // Max delay between attempts (5s)
+        })
 
         this.socket.on("connect",()=>{
             console.log(chalk.green("connected to sfu"))
+            this.sfu_socket_connected=true
         })
 
         this.socket.on("get_peerid", (peerid)=>{
             this.peerid=peerid
-            console.log(chalk.green("recieved peerid:"), peerid)
+            // console.log(chalk.green("recieved peerid:"), peerid)
         })
 
         this.socket.on('disconnect', (reason) => {
             console.log(chalk.red(`User disconnected because: ${reason}`));
-            // Perform cleanup actions here, e.g., update user list in database
+            this.sfu_socket_connected=false
+        });
+
+        this.socket.io.on("reconnect_failed", () => {
+            this.disconnect()
         });
     }
 
@@ -32,7 +41,7 @@ class SocketIOClient{
 
     on(event_name, callback){
         if(!event_name || !callback || !this.socket ) return
-        console.log(chalk.yellow(`listening to ${event_name}:`),callback?.name)
+        // console.log(chalk.yellow(`listening to ${event_name}:`),callback?.name)
 
         for(const cb of this.on_recieve_callbacks){
             this.socket.on(event_name, ()=>{cb(event_name,callback.name)})
@@ -49,7 +58,7 @@ class SocketIOClient{
     emit(event_name, msg, cb){
         if(!msg || !this.socket) return
         const message={...msg, peerid:this.socket.id}
-        console.log(chalk.yellow(`emitting:- ${event_name}:`), message)
+        // console.log(chalk.yellow(`emitting:- ${event_name}:`), message)
 
         this.socket.emit(event_name, message, cb)
     }
@@ -60,6 +69,7 @@ class SocketIOClient{
         this.socket=null
         this.peerid=null
         this.on_recieve_callbacks=[]
+        this.sfu_socket_connected=false
     }
 }
 
