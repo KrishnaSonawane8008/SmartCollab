@@ -18,7 +18,7 @@ const Signup = () => {
     <>
       <nav className="fixed top-0 w-full z-50 bg-[var(--sc-surface)]/70 backdrop-blur-3xl">
         <div className="flex justify-between items-center px-6 py-6 w-full max-w-7xl mx-auto">
-          <span className="font-headline font-bold text-xl text-[var(--sc-primary)] tracking-tight">Smart Collab</span>
+          <span className="font-['Manrope'] font-bold text-xl text-[var(--sc-on-surface)]">Smart <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">Collab</span></span>
           <Link to="/login" className="font-label text-[0.75rem] uppercase font-semibold tracking-wider text-[var(--sc-on-surface)]/60 hover:text-[var(--sc-primary)] transition-all">Log In</Link>
         </div>
       </nav>
@@ -28,14 +28,14 @@ const Signup = () => {
         {/* LEFT PANEL */}
         <div className="hidden md:flex flex-1 relative overflow-hidden bg-[var(--sc-surface-low)]">
           <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcwp_ygtrbMA1KMco4A8g1MdoWmTJ2vqsUlbjshypgoiEjFuicO_yTYStOjD0_I1s6HebWpi5lqHtvpyyyVViYLQ67H7WTPEODpWmktFnnjA207mSmaVeKYUF4EIe224trZCXKAsNKrDTpygWj2-vvXo3Hc0MoY8uV4DcVKxNrzsl-AA3n4yhv6DqUmplKPbjSeLtAEBHtLfaX4__6QPBrA27qwHZ_MwpSu67OAn6rkEg_TXT9jWm2lV43dtVIDbuENVNG9IggHBY"
+            src="/assets/worksps.png"
             className="absolute inset-0 w-full h-full object-cover opacity-10"
             alt="Workspace background"
           />
           <div className="relative z-10 flex items-center justify-center w-full h-full px-6 md:px-12 lg:px-20">
             <div className="max-w-md">
               <h1 className="font-headline text-[3.5rem] leading-tight font-bold tracking-tight mb-6 text-[var(--sc-on-surface)]">
-                Elevate your <span className="text-[var(--sc-tertiary)]">Smart</span> flow.
+                Elevate your <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Smart</span> flow.
               </h1>
               <p className="text-[var(--sc-on-surface-variant)] text-lg leading-relaxed mb-12">
                 Join the curated workspace designed for teams who prioritize intentionality over noise.
@@ -137,7 +137,7 @@ const Signup = () => {
       <footer className="w-full py-12 bg-[var(--sc-surface)] border-t border-[var(--sc-outline-variant)]/10">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 max-w-7xl mx-auto">
           <div className="font-label text-[0.75rem] uppercase font-semibold tracking-wider text-[var(--sc-on-surface)]/60 mb-4 md:mb-0">
-            &copy; 2025 Smart Collab. The Curated Workspace.
+            &copy; 2026 Smart Collab. The Curated Workspace.
           </div>
           <div className="flex gap-8">
             <a href="#" className="font-label text-[0.75rem] uppercase font-semibold tracking-wider text-[var(--sc-on-surface)]/60 hover:text-[var(--sc-primary)] transition-all">Privacy</a>

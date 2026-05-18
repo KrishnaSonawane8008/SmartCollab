@@ -2,7 +2,17 @@
 @plugin "tailwind-scrollbar";
 @variant dark (&:where(.dark, .dark *));
 
+html {
+  scroll-behavior: smooth;
+}
 /* ─── Fonts ──────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'ItalicCustom';
+  src: url('/Fonts/italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @font-face {
   font-family: 'Inter';
   src: url('/Fonts/Inter-VariableFont_opsz,wght.ttf') format('truetype');

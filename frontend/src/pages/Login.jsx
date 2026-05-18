@@ -133,7 +133,7 @@ const Login = () => {
       <div className="hidden md:flex md:w-1/2 flex-col justify-between p-12 relative overflow-hidden bg-[var(--sc-surface-low)]">
         {/* Background image */}
         <img 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5vO0awJfK6VNF1Y_wkx1rH1CVwni7MJ_Y-r6lzzLl7RXThuUuTgmhLsvfsKLnT5qn7kythD4AYjg6Ga8Smvn0SzffhxPoM8Ge4_-Kj5ne6WYvfBvwuyvVa7mdvK3DogBFP39RrpGZT9lefS5-WMkO12QaBAkL5Pd8rnPFXuI8G3DzgON1jcsLJzQsUPVy3Ozz44Ye_apkwh1g9SOif5Mx54HiOhXY5dG_EZPAOAkxh_bI10ZEO0PWVJN4NJQqklyzeyALtyB_OS0"
+          src="/assets/backgg.png"
           className="absolute inset-0 w-full h-full object-cover opacity-15 mix-blend-multiply grayscale"
           alt="Workspace background"
         />
@@ -142,12 +142,12 @@ const Login = () => {
         
         {/* Navbar */}
         <div className="relative flex items-center">
-          <span className="font-['Manrope'] font-bold text-xl text-[var(--sc-on-surface)]">Smart <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">Collab</span></span>
+          <span className="font-['Manrope'] font-bold text-xl text-[var(--sc-on-surface)]">Smart <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">Collab</span></span>
         </div>
 
         <div className="relative">
           <h1 className="font-['Manrope'] text-4xl md:text-5xl font-bold text-[var(--sc-on-surface)] leading-tight">
-            The Curated <span className="font-['Playfair_Display'] italic text-[var(--sc-tertiary)]">Workspace</span> experience.
+            The Curated <span className="font-['ItalicCustom'] font-bold text-[var(--sc-tertiary)]">Workspace</span> experience.
           </h1>
         </div>
 
@@ -273,7 +273,7 @@ const Login = () => {
             <a href="#" className="hover:text-[var(--sc-tertiary)] transition-colors">Workspace Support</a>
           </div>
           <div className="text-[0.65rem] uppercase tracking-widest text-[var(--sc-on-surface-variant)]/30">
-            &copy; 2025 Smart Collab. The Curated Workspace.
+            &copy; 2026 Smart Collab. The Curated Workspace.
           </div>
         </footer>
       </div>

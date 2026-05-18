@@ -165,27 +165,63 @@ const IntroCanvas = () => {
   )
 }
 
+const NAV_LINKS = [
+  { label: 'Platform', href: '#platform', id: 'platform' },
+  { label: 'Design', href: '#design', id: 'design' },
+  { label: 'Capabilities', href: '#capabilities', id: 'capabilities' },
+  { label: 'Architects', href: '#architects', id: 'architects' },
+]
+
 const Navigation = ({ onSignIn }) => {
+  const [activeSection, setActiveSection] = useState('platform')
+
+  useEffect(() => {
+    const observers = []
+
+    NAV_LINKS.forEach(({ id }) => {
+      const el = document.getElementById(id)
+      if (!el) return
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id)
+        },
+        { rootMargin: '-40% 0px -55% 0px', threshold: 0 }
+      )
+      observer.observe(el)
+      observers.push(observer)
+    })
+
+    return () => observers.forEach(o => o.disconnect())
+  }, [])
+
   return (
     <header className="fixed top-0 w-full z-40">
       <nav className="w-full px-8 py-4 flex items-center justify-between backdrop-blur-2xl bg-white/30 border-b border-white/10 shadow-sm">
         <div className="text-2xl font-bold tracking-tight text-[var(--sc-on-surface)] font-headline">
-          Smart <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Collab</span>
+          Smart <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">Collab</span>
         </div>
 
         <div className="hidden md:flex items-center gap-10">
-          <a href="#platform" className="text-[var(--sc-tertiary)] font-semibold relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-[var(--sc-tertiary)] after:rounded-full text-sm tracking-wide">
-            Platform
-          </a>
-          <a href="#design" className="text-[var(--sc-on-surface)] hover:text-[var(--sc-tertiary)] transition-colors text-sm tracking-wide">
-            Design
-          </a>
-          <a href="#capabilities" className="text-[var(--sc-on-surface)] hover:text-[var(--sc-tertiary)] transition-colors text-sm tracking-wide">
-            Capabilities
-          </a>
-          <a href="#architects" className="text-[var(--sc-on-surface)] hover:text-[var(--sc-tertiary)] transition-colors text-sm tracking-wide">
-            Architects
-          </a>
+          {NAV_LINKS.map(({ label, href, id }) => {
+            const isActive = activeSection === id
+            return (
+              <a
+                key={id}
+                href={href}
+                className={`relative text-sm tracking-wide transition-colors ${
+                  isActive
+                    ? 'text-[var(--sc-tertiary)] font-semibold'
+                    : 'text-[var(--sc-on-surface)] hover:text-[var(--sc-tertiary)]'
+                }`}
+              >
+                {label}
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--sc-tertiary)] rounded-full" />
+                )}
+              </a>
+            )
+          })}
         </div>
 
         <button
@@ -205,7 +241,7 @@ const AnimatedWord = ({ onGetStarted }) => {
   return (
     <span
       onClick={() => setClicked(!clicked)}
-      className={`inline-block font-['Playfair_Display'] italic text-[var(--sc-tertiary)] cursor-pointer select-none transition-all duration-300 ${clicked ? 'brightness-110 scale-[1.02]' : 'brightness-100 scale-100'} hover:brightness-110`}
+      className={`inline-block font-['ItalicCustom'] text-[var(--sc-tertiary)] cursor-pointer select-none transition-all duration-300 ${clicked ? 'brightness-110 scale-[1.02]' : 'brightness-100 scale-100'} hover:brightness-110`}
       style={{ minWidth: '11ch', userSelect: 'none' }}
     >
       {word.split('').map((letter, i) => (
@@ -235,7 +271,7 @@ const Hero = ({ onGetStarted }) => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--sc-surface-container)] mb-8">
               <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--sc-primary)]">Next-Gen Productivity</span>
               <span className="w-1 h-1 rounded-full bg-[var(--sc-tertiary)]" />
-              <span className="text-[10px] font-medium text-[var(--sc-on-surface-variant)] uppercase text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">Live Sync v2.0</span>
+              <span className="text-[10px] font-medium text-[var(--sc-on-surface-variant)] uppercase text-[var(--sc-tertiary)] font-['ItalicCustom']">Live Sync v2.0</span>
             </div>
 
             {/* 3 clean lines */}
@@ -300,7 +336,7 @@ const Features = () => {
         <div className="text-center mb-20">
           <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--sc-primary)]">Architectural Design</span>
           <h2 className="font-headline text-4xl font-semibold mt-4">
-            <span className="bg-green-100/60 px-3 py-1 rounded-sm inline-block">Designed for <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">Clarity</span></span>
+            <span className="bg-green-100/60 px-3 py-1 rounded-sm inline-block">Designed for <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">Clarity</span></span>
           </h2>
         </div>
 
@@ -314,7 +350,7 @@ const Features = () => {
               </div>
               <h3 className="text-2xl font-headline font-semibold mb-4 text-[var(--sc-on-surface)]">Unified Productivity Canvas</h3>
               <p className="text-[var(--sc-on-surface-variant)] leading-relaxed max-w-sm">
-                Stop context switching. Our unified canvas integrates communication, tasks, and creative assets into a single <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">rhythmic flow</span>.
+                Stop context switching. Our unified canvas integrates communication, tasks, and creative assets into a single <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">rhythmic flow</span>.
               </p>
             </div>
             <div className="mt-8 rounded-2xl overflow-hidden border border-[var(--sc-outline-variant)]/10 shadow-sm">
@@ -334,7 +370,7 @@ const Features = () => {
               </div>
               <h3 className="text-2xl font-headline font-semibold mb-4 text-[var(--sc-on-surface)]">Intentional AI</h3>
               <p className="text-[var(--sc-on-surface-variant)] leading-relaxed">
-                Beyond simple chat. Our AI surfaces critical communication threads exactly when you need them, preserving your <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">deep focus</span>.
+                Beyond simple chat. Our AI surfaces critical communication threads exactly when you need them, preserving your <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">deep focus</span>.
               </p>
             </div>
 
@@ -390,8 +426,8 @@ const CoreCapabilities = () => {
     <section id="capabilities" className="py-24 bg-[var(--sc-surface-container-low)]">
       <div className="max-w-7xl mx-auto px-8">
         <div className="mb-16 text-center mx-auto">
-          <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Core Capabilities</span>
-          <h2 className="text-4xl font-headline font-bold text-[var(--sc-on-surface)] mt-2 text-center">Tools for <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Modern Teams</span></h2>
+          <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Core Capabilities</span>
+          <h2 className="text-4xl font-headline font-bold text-[var(--sc-on-surface)] mt-2 text-center">Tools for <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Modern Teams</span></h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -421,7 +457,7 @@ const HowItWorks = () => {
     <section className="py-32 bg-[var(--sc-surface)]">
       <div className="max-w-7xl mx-auto px-8">
         <div className="text-center max-w-2xl mx-auto mb-20">
-          <h2 className="text-4xl font-headline font-bold mb-6 text-[var(--sc-on-surface)]">Experience <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Seamless Flow</span></h2>
+          <h2 className="text-4xl font-headline font-bold mb-6 text-[var(--sc-on-surface)]">Experience <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Seamless Flow</span></h2>
           <p className="text-[var(--sc-on-surface-variant)]">Three steps to a more intentional work environment.</p>
         </div>
 
@@ -460,9 +496,9 @@ const Testimonials = () => {
 
           {/* Quote */}
           <div className="w-full md:w-1/2">
-            <span className="text-[var(--sc-tertiary)] font-bold tracking-[0.2em] uppercase text-[10px] mb-6 block font-['Playfair_Display'] italic">The Studio Experience</span>
+            <span className="text-[var(--sc-tertiary)] font-bold tracking-[0.2em] uppercase text-[10px] mb-6 block font-['ItalicCustom']">The Studio Experience</span>
             <blockquote className="text-3xl font-headline font-bold text-[var(--sc-on-surface)] leading-snug mb-8">
-              "Smart Collab has transformed our studio from a collection of individuals into a <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">unified creative force</span>. It&apos;s the first platform that respects our aesthetic standards as much as our technical ones."
+              "Smart Collab has transformed our studio from a collection of individuals into a <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">unified creative force</span>. It&apos;s the first platform that respects our aesthetic standards as much as our technical ones."
             </blockquote>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-stone-300" />
@@ -477,14 +513,14 @@ const Testimonials = () => {
         {/* Grid testimonials */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-24">
           <div className="bg-[var(--sc-surface)] p-8 rounded-3xl border border-[var(--sc-outline-variant)]/10">
-            <p className="text-[var(--sc-on-surface-variant)] italic mb-6">"Finally, a productivity tool that doesn&apos;t feel like a spreadsheet. It&apos;s calm, intentional, and actually makes us <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">faster</span>."</p>
+            <p className="text-[var(--sc-on-surface-variant)] italic mb-6">"Finally, a productivity tool that doesn&apos;t feel like a spreadsheet. It&apos;s calm, intentional, and actually makes us <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">faster</span>."</p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[var(--sc-primary)]/10" />
               <span className="text-xs font-bold text-[var(--sc-on-surface)]">Elena Vance, Product Lead @ Lumina</span>
             </div>
           </div>
           <div className="bg-[var(--sc-surface)] p-8 rounded-3xl border border-[var(--sc-outline-variant)]/10">
-            <p className="text-[var(--sc-on-surface-variant)] italic mb-6">"The async video features changed how we handle time-zones. No more midnight meetings, just <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">clear communication</span>."</p>
+            <p className="text-[var(--sc-on-surface-variant)] italic mb-6">"The async video features changed how we handle time-zones. No more midnight meetings, just <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">clear communication</span>."</p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[var(--sc-tertiary)]/10" />
               <span className="text-xs font-bold text-[var(--sc-on-surface)]">Mark Thorne, CTO @ Nova Systems</span>
@@ -583,8 +619,8 @@ const MeetTheTeam = () => {
     <section id="architects" className="py-12 bg-stone-100">
       <div className="max-w-7xl mx-auto px-8">
         <div className="text-center mb-8">
-          <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Our People</span>
-          <h2 className="font-headline text-4xl font-bold text-[var(--sc-on-surface)] mt-2">Meet the <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Architects</span></h2>
+          <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Our People</span>
+          <h2 className="font-headline text-4xl font-bold text-[var(--sc-on-surface)] mt-2">Meet the <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Architects</span></h2>
           <p className="text-[var(--sc-on-surface-variant)] mt-4 max-w-xl mx-auto">The visionaries behind the next generation of collaborative craft.</p>
         </div>
 
@@ -685,7 +721,7 @@ const MeetTheTeam = () => {
                     style={{ background: `linear-gradient(90deg, ${member.color}40, transparent)` }}
                   />
                   
-                  <p className="text-xs text-white/50 font-['Playfair_Display'] italic">
+                  <p className="text-xs text-white/50 font-['ItalicCustom']">
                     "{member.tagline}"
                   </p>
                 </div>
@@ -708,10 +744,10 @@ const Footer = () => {
       <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto w-full">
         <div className="mb-8 md:mb-0 text-center md:text-left">
           <div className="text-xl font-bold text-[var(--sc-on-surface)] mb-2 font-headline">
-            Smart <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic font-semibold">Collab</span>
+            Smart <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Collab</span>
           </div>
           <p className="text-stone-500 text-sm max-w-xs">
-            Redefining digital craftsmanship through <span className="text-[var(--sc-tertiary)] font-['Playfair_Display'] italic">intentional</span> collaboration tools.
+            Redefining digital craftsmanship through <span className="text-[var(--sc-tertiary)] font-['ItalicCustom']">intentional</span> collaboration tools.
           </p>
         </div>
 
@@ -723,7 +759,7 @@ const Footer = () => {
         </div>
 
         <div className="text-stone-500 text-[10px] font-medium uppercase tracking-[0.2em]">
-          &copy; 2025 Smart Collab. All rights reserved.
+          &copy; 2026 Smart Collab. All rights reserved.
         </div>
       </div>
     </footer>
