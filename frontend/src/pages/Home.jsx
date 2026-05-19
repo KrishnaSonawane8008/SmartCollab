@@ -540,7 +540,8 @@ const TEAM = [
     description: "I led the vision, architecture planning, and ensured smooth execution across the team.",
     img: "/assets/1.jpeg",
     color: "#6366f1",
-    zone: { top: "15%", left: "8%", width: "16%", height: "65%" },
+    role_color:"#292df0",
+    zone: { bottom: "0%", left: "18%", width: "17.5%", height: "75%" },
     cardPosition: "left",
   },
   {
@@ -550,7 +551,8 @@ const TEAM = [
     description: "Every system component was designed with precision to handle high-volume data flow.",
     img: "/assets/2.jpeg",
     color: "#eab308",
-    zone: { top: "15%", left: "26%", width: "18%", height: "65%" },
+    role_color:"#eab308",
+    zone: { bottom: "0%", left: "35.5%", width: "14%", height: "75%" },
     cardPosition: "left",
   },
   {
@@ -560,7 +562,8 @@ const TEAM = [
     description: "Optimized APIs and database queries to ensure lightning-fast response times.",
     img: "/assets/3.jpeg",
     color: "#22c55e",
-    zone: { top: "15%", left: "46%", width: "18%", height: "65%" },
+    role_color:"#00ff5e",
+    zone: { bottom: "0%", left: "49.5%", width: "12%", height: "75%" },
     cardPosition: "right",
   },
   {
@@ -570,36 +573,114 @@ const TEAM = [
     description: "Every interaction was crafted to feel natural, responsive, and delightful across all devices.",
     img: "/assets/4.jpeg",
     color: "#3b82f6",
-    zone: { top: "15%", left: "66%", width: "18%", height: "65%" },
+    role_color:"#3b82f6",
+    zone: { bottom: "0%", left: "90%", width: "14%", height: "75%" },
     cardPosition: "right",
   },
 ]
 
-const useTypingEffect = (text, active, delay = 25) => {
+
+
+const FloatingInfoBox=({activeIndex,member, indx})=>{
+  const isLeft = member.cardPosition === "left"
   const [displayedText, setDisplayedText] = useState("")
+  const text=member.description
 
   useEffect(() => {
-    if (!active) {
+    if (activeIndex !== indx) {
       setDisplayedText("")
       return
     }
 
     setDisplayedText("")
-    let index = 0
+
     const interval = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText((prev) => prev + text[index])
-        index++
-      } else {
-        clearInterval(interval)
-      }
-    }, delay)
+      setDisplayedText((prev) => {
+        // The current length of prev tells us EXACTLY which character comes next
+        if (prev.length < text.length) {
+          return prev + text[prev.length];
+        } else {
+          clearInterval(interval);
+          return prev;
+        }
+    });
+    }, 25)
 
     return () => clearInterval(interval)
-  }, [text, active, delay])
+  }, [activeIndex])
 
-  return displayedText
+
+  const getPosition = () => {
+    if (isLeft) {
+      return { left: "-2%", top: "12%" }
+    }
+    return { right: "-2%", top: "12%" }
+  }
+
+
+  return(
+    <div
+      className="absolute w-80 select-none"
+      style={{
+        ...getPosition(),
+        zIndex: 25,
+        opacity: activeIndex === indx ? 1 : 0,
+        transform: activeIndex === indx ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
+        transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        borderRadius:"1rem",
+        backdropFilter: "blur(30px)",
+        WebkitBackdropFilter: "blur(30px)",
+        pointerEvents: "none",
+        overflow:"hidden"
+        // willChange:"opacity, transform"
+      }}
+    >
+      <div 
+        className=" absolute inset-0 opacity-[0.15] p-[20px]"
+        style={{ 
+          background: member.color, 
+        }}
+      />
+      <div
+        className="relative p-6 "
+        style={{
+          border: "1px solid rgba(255,255,255,0.15)",
+          borderRadius:"1rem",
+        }}
+      >
+        <span 
+          className="text-[10px] font-bold tracking-widest uppercase mb-2 block"
+          style={{ 
+            color: member.role_color,
+          }}
+        >
+          {member.role}
+        </span>
+        <h4 className="font-bold text-xl text-white mb-3">{member.name}</h4>
+        
+        <div className="text-sm text-white/70 leading-relaxed mb-3">
+          {displayedText}
+          <span 
+            className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
+            style={{ background: member.color }}
+          />
+        </div>
+        
+        <div 
+          className="h-px w-full my-3 rounded-full"
+          style={{ background: `linear-gradient(90deg, ${member.color}40, transparent)` }}
+        />
+        
+        <p className="text-xs text-white/50 font-['ItalicCustom']">
+          "{member.tagline}"
+        </p>
+      </div>
+    </div>
+
+    
+  )
 }
+
 
 const MeetTheTeam = () => {
   const [activeIndex, setActiveIndex] = useState(null)
@@ -663,69 +744,15 @@ const MeetTheTeam = () => {
           </div>
 
           {TEAM.map((member, i) => {
-            const displayedText = useTypingEffect(member.description, activeIndex === i)
-            const isLeft = member.cardPosition === "left"
             
-            const getPosition = () => {
-              if (isLeft) {
-                return { left: "-2%", top: "12%" }
-              }
-              return { right: "-2%", top: "12%" }
-            }
 
             return (
-              <div
+              <FloatingInfoBox
                 key={i}
-                className="absolute w-80 select-none"
-                style={{
-                  ...getPosition(),
-                  zIndex: 25,
-                  opacity: activeIndex === i ? 1 : 0,
-                  transform: activeIndex === i ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
-                  transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  pointerEvents: "none",
-                }}
-              >
-                <div 
-                  className="absolute inset-0 rounded-2xl blur-xl"
-                  style={{ background: member.color, opacity: 0.15 }}
-                />
-                <div
-                  className="relative p-6 rounded-2xl"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 40px ${member.color}20`,
-                  }}
-                >
-                  <span 
-                    className="text-[10px] font-bold tracking-widest uppercase mb-2 block"
-                    style={{ color: member.color }}
-                  >
-                    {member.role}
-                  </span>
-                  <h4 className="font-bold text-xl text-white mb-3">{member.name}</h4>
-                  
-                  <div className="text-sm text-white/70 leading-relaxed mb-3">
-                    {displayedText}
-                    <span 
-                      className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
-                      style={{ background: member.color }}
-                    />
-                  </div>
-                  
-                  <div 
-                    className="h-px w-full my-3 rounded-full"
-                    style={{ background: `linear-gradient(90deg, ${member.color}40, transparent)` }}
-                  />
-                  
-                  <p className="text-xs text-white/50 font-['ItalicCustom']">
-                    "{member.tagline}"
-                  </p>
-                </div>
-              </div>
+                activeIndex={activeIndex}
+                member={member}
+                indx={i}
+              />
             )
           })}
         </div>
