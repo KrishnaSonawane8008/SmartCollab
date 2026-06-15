@@ -113,6 +113,7 @@ class LiveAudioService {
    * Handle incoming audio chunk from a user
    */
   async handleAudioChunk(roomId, userId, audioData, timestamp, emitCallback) {
+
     try {
       // Validate inputs
       if (!roomId || !userId || !audioData) {
@@ -121,7 +122,6 @@ class LiveAudioService {
       }
 
       const session = this._getOrCreateSession(roomId, userId);
-      
       // Check if session is active
       if (!session.isActive) {
         console.log(`[LiveAudioService] Skipping audio chunk – session inactive for user ${userId}`);

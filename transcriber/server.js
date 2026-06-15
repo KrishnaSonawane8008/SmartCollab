@@ -36,6 +36,7 @@ const liveAudioService = new LiveAudioService({
 
 socket.on('message', (msg)=>{
   const ssrc=msg.readUint32BE(8);
+  // console.log(ssrc)
   const sequenceNumber = msg.readUInt16BE(2);
   
   const PacketInfo=SFUConnectionHandler.PacketInfo.get(ssrc)
@@ -58,6 +59,7 @@ socket.bind(PORT)
 
 setInterval(() => {
   for (const [ssrc, pipeline] of Pipelines) {
+    // console.log(`ssrc: ${ssrc}`)
     pipeline.process(10); // limit work per tick
     const PacketInfo=SFUConnectionHandler.PacketInfo.get(ssrc)
     if(!PacketInfo) return
@@ -67,12 +69,13 @@ setInterval(() => {
     const chunk = pipeline.getChunkIfReady();
 
     const AllRoomChunks=AllChunks_Roomwise.get(roomId)
+    
     if (chunk) {
 
       if(AllRoomChunks){
         AllRoomChunks.push(chunk)
       }
-
+      
       liveAudioService.handleAudioChunk(
         roomId,
         UserId,
@@ -120,11 +123,11 @@ function CreateChunkStoreRoom(roomId){
   AllChunks_Roomwise.set(roomId, [])
 }
 
-function ConvertChunksToWav(){
-  for(const [roomId, AllChunks] of AllChunks_Roomwise){
-    writeChunksToWav(AllChunks, `Room${roomId}_Audio.wav`, 16000);
-  }
-}
+// function ConvertChunksToWav(){
+//   for(const [roomId, AllChunks] of AllChunks_Roomwise){
+//     writeChunksToWav(AllChunks, `Room${roomId}_Audio.wav`, 16000);
+//   }
+// }
 
 //===================================================================
 

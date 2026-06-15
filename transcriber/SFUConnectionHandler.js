@@ -61,10 +61,11 @@ class SFUConnectionHandler{
                 if(room){
                     room.delete(UserId)
                     console.log(chalk.magenta(`Removed ${UserName} from Room ${roomId}`))
-                    if(room.size==0){
-                        this.Remove_Pipeline(ssrc)
+                    this.Remove_Pipeline(ssrc)
+                    // if(room.size==0){
+                    //     this.Remove_Pipeline(ssrc)
 
-                    }
+                    // }
                 }
             })
 

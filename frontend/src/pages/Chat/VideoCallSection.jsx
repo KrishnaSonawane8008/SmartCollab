@@ -485,12 +485,13 @@ const VideoPanel=()=>{
                                         const chunks = [];
                                         // const video_stream=[...webrtc_client.RemoteVideoStreams][0][1]
 
+                                        const remote_streams_map_list=[...webrtc_client.RemoteVideoStreams]
+                                        // console.log([...remote_streams_map_list[0]][1])
                                         // const data=Array.from({length: 5}, (_, i)=>{
                                         //     return(
-                                        //     <RemoteVideoPlayer stream={video_stream} key={i} callback={()=>{console.log(chalk.green("Mounted Remote Video Stream"))}}/> 
+                                        //     <RemoteVideoPlayer stream={[...remote_streams_map_list[0]][1].stream} key={i} callback={()=>{console.log(chalk.green("Mounted Remote Video Stream"))}}/> 
                                         //     )
                                         // })
-                                        const remote_streams_map_list=[...webrtc_client.RemoteVideoStreams]
                                         
                                         const data=remote_streams_map_list.
                                                     filter(([key, obj])=>obj?.appData?.type!=="ScreenCaptureFeed")
