@@ -153,27 +153,27 @@ def Remove_Channel_Member(uid:int, comm_id:int, channel_id:int, session: Session
 
     session.execute(query)
 
-    query=delete(Messages).where(
-        Messages.community_id==comm_id,
-        Messages.channel_id==channel_id,
-        ~exists(select(1).where(
-            Channel_Members.community_id==Messages.community_id,
-            Channel_Members.channel_id==Messages.channel_id
-        ))
-    )
-    session.execute(query)
+    # query=delete(Messages).where(
+    #     Messages.community_id==comm_id,
+    #     Messages.channel_id==channel_id,
+    #     ~exists(select(1).where(
+    #         Channel_Members.community_id==Messages.community_id,
+    #         Channel_Members.channel_id==Messages.channel_id
+    #     ))
+    # )
+    # session.execute(query)
 
-    query=delete(Channels).where(
-        Channels.community_id==comm_id,
-        Channels.channel_id==channel_id,
-        ~exists(select(1).where(
-            Channel_Members.community_id==Channels.community_id,
-            Channel_Members.channel_id==Channels.channel_id
-        ))
-    )
-    session.execute(query)
+    # query=delete(Channels).where(
+    #     Channels.community_id==comm_id,
+    #     Channels.channel_id==channel_id,
+    #     ~exists(select(1).where(
+    #         Channel_Members.community_id==Channels.community_id,
+    #         Channel_Members.channel_id==Channels.channel_id
+    #     ))
+    # )
+    # session.execute(query)
 
-    core.redis_api.delete_redis_list(f"chat_messages:{comm_id}:{channel_id}")
+    # core.redis_api.delete_redis_list(f"chat_messages:{comm_id}:{channel_id}")
 
     return {"Success":True}
 

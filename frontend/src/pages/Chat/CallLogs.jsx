@@ -1,9 +1,12 @@
-import { MoveLeft, ChevronDown, ChevronLeft, AlertCircle } from "lucide-react"
+import { MoveLeft, ChevronDown, ChevronLeft, AlertCircle, Trash2Icon, Loader2} from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { get_call_logs, get_call_summary } from "../../services/summary_service"
 import { useEffect, useState } from "react"
 import ScrollBar from "../common components/ScrollBar"
+import { delete_call_log } from "../../services/dev_services"
+
+const DEV_KEY = import.meta.env.VITE_DEV_MODE_KEY
 
 const Header=()=>{
 
@@ -58,7 +61,8 @@ function get_date_time(date_obj){
 const LogTab=({value})=>{
     
     const [open, setOpen]=useState(false)
-
+    const [deletion_loading, setDeletionLoading]=useState(false)
+    const queryClient = useQueryClient();
     // call_id : 134
     // call_participants : ['User2']
     // call_starter_id : 2
@@ -106,6 +110,37 @@ const LogTab=({value})=>{
                         Generate Summary ✨
                     </button>
                 </div>
+                { DEV_KEY &&
+                    <div className="ml-[10px] select-none cursor-pointer">
+                        <button 
+                            className="flex-shrink-0 rounded-[10px] flex items-center justify-center bg-[#e04d4d] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] text-[#f4e6c8] transition-all duration-250 cursor-pointer group px-[6px] py-[6px]"
+
+                            onClick={()=>{
+                                setDeletionLoading(true)
+                                delete_call_log(value.community_id, value.channel_id, value.call_id, DEV_KEY).then((response)=>{
+                                    if(response.Success===true){
+                                        queryClient?.refetchQueries({
+                                            queryKey:["call_logs", `${value.community_id}`, `${value.channel_id}`], 
+                                            exact:true
+                                        })
+                                    }
+                                }).catch((error)=>{
+                                    setDeletionLoading(false)
+                                    console.error(error)
+                                }).finally(()=>{
+                                    setDeletionLoading(false)
+                                })
+                            }}
+                        >
+                            { !deletion_loading ? (
+                                    <Trash2Icon size={22}/>
+                                ):(
+                                    <Loader2 size={22} className=" animate-spin"/>
+                                )
+                            }
+                        </button>
+                    </div>
+                }
                 <div
                     className="ml-[10px] select-none cursor-pointer"
                     onClick={()=>{setOpen(!open)}}
@@ -193,7 +228,9 @@ const Content=()=>{
 
     const {data, isLoading, isError, error}=useQuery({
         queryKey: ["call_logs", communityId, channelId],
-        queryFn: ()=>{return get_call_logs(communityId, channelId)},
+        queryFn: ()=>{
+            return get_call_logs(communityId, channelId)
+        },
         enabled: !!channelId && !!communityId,
         staleTime: Infinity
     })

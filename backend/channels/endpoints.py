@@ -125,6 +125,7 @@ def leave_Channel(communityId:int, channelId:int, access_token: str=Depends(toke
     channel_members=get_Channle_Members(community_id=communityId, channel_id=channelId, session=db)
     
     if(len(channel_members)==1):
+        Print.yellow("Deleting all messages from the channel")
         remove_status=Remove_All_ChannelMessages(comm_id=communityId, channel_id=channelId, session=db)
         
         if(remove_status.get("Success")==True):

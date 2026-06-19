@@ -7,7 +7,7 @@ import { MoveLeft, UserPlus } from "lucide-react"
 import ScrollBar from "../common components/ScrollBar"
 import { accept_invite, reject_invite } from "../../services/user_services"
 import { join_channel } from "../../services/channel_services"
-
+import { wsClient } from "../../api/websocket"
 
 
 const Header=()=>{
@@ -90,6 +90,12 @@ const ChannelInvite=({Invite, refetch})=>{
             .then((response)=>{
 
               if(response.Success===true){
+                try{
+                  wsClient.reconnect()
+                }catch(e){
+                  window.location.reload()
+                  console.error(e)
+                }
                 setJoinedCommunity(!JoinedCommunity)
                 queryClient.invalidateQueries({
                   queryKey:["community_channels", `${Invite.community_id}`], 

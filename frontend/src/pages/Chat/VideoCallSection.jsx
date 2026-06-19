@@ -439,7 +439,7 @@ const VideoPanel=()=>{
     return(
         <div className=" relative flex flex-col w-full h-full bg-[#f5f3ef]  min-h-0 ">
 
-            {   webrtc_client.device===null ?
+            {   webrtc_client.device===null?
                 (
                     <ScheduleMeeting
                         start_call={start_call}
@@ -601,7 +601,7 @@ const VideoPanel=()=>{
                     </>
                 ):(
                     <div className="flex-1 w-full h-full flex flex-col items-center pt-10 bg-[#F5F3EF]">
-                        <h1 className="text-[#8A817C] text-[0.95rem] mt-4 font-medium">You are already in a Call</h1>
+                        <h1 className="text-[#8A817C] text-[1rem] mt-4 font-medium">You are already in a Call</h1>
                         <button 
                             className={` mt-3 flex bg-[#225e48] cursor-pointer rounded-full w-fit h-fit py-1.5 px-3 gap-[0.5rem] flex-row justify-center items-center select-none`}
                             onClick={()=>{
@@ -609,7 +609,7 @@ const VideoPanel=()=>{
                                 }}
                         >
                             <div
-                                className={`text-[#f2e8d7] text-[0.7rem]`}
+                                className={`text-[#f2e8d7] text-[0.85rem]`}
                             >
                                 Back to Call
                             </div>

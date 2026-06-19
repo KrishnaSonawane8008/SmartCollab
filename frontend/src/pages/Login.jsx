@@ -170,7 +170,7 @@ const Login = () => {
         </div>
 
         {/* Demo credentials panel */}
-        {DEV_KEY && 
+        {DEV_KEY && Array.isArray(users_list) && users_list.length>0 &&
           <Show_Demo_Creds 
             users_creds={users_list}
             username_input_ref={usernameRef}

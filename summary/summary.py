@@ -87,9 +87,9 @@ async def get_summary(data: dict) -> str:
             # Extract content from the chat message structure
             return result.get("message", {}).get("content", "").strip()
         except httpx.HTTPStatusError as e:
-            return f"Ollama Error: {e.response.status_code} - Make sure model '{MODEL_NAME}' is loaded."
+            raise Exception(f"Ollama Error: {e.response.status_code} - Make sure model '{MODEL_NAME}' is loaded.")
         except Exception as e:
-            return f"Connection Error: {str(e)}"
+            raise Exception(f"Connection Error: {str(e)}")
 
 @app.post("/summarize")
 async def summarize(request: TranscriptRequest):
