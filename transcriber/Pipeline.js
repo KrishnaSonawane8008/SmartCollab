@@ -65,25 +65,26 @@ class PCMStitcher {
     this.sampleRate = sampleRate;
     this.chunkSize = chunkSize;
 
-    this.buffer = [];      // array of Int16 samples
-    this.chunks = [];      // completed 1-sec chunks
+    this.buffer = [];      // array of Int16 samples from the decoder, will be of 32000 bytes for a 1 sec pcm chunk
+    this.chunks = [];      // completed 1-sec chunks, each chunk will contain 16000 samples, and will be of 32000 bytes
   }
 
   write(pcmFrame) {
-    // pcmFrame is Int16Array from Opus decode
-    this.buffer.push(...pcmFrame);//pcmFrame length 1920
+    
 
-    // create full 1-sec chunks
-    while (this.buffer.length >= this.chunkSize) {
-      const chunk = new Buffer.alloc(this.chunkSize);
-      for (let i = 0; i < this.chunkSize; i++) {
-        chunk[i] = this.buffer[i];
-      }
+    this.buffer.push(...pcmFrame);
+    console.log(this.buffer.length)
+    if (this.buffer.length >= this.chunkSize) {
+      const chunk = new Buffer.from(this.buffer.slice(0, this.chunkSize));
+
       this.chunks.push(chunk);
 
-      // remove used samples
       this.buffer = this.buffer.slice(this.chunkSize);
     }
+
+    // const chunk=new Buffer.from([...pcmFrame])
+    // this.chunks.push(chunk);
+
   }
 
   readChunk() {
@@ -101,10 +102,10 @@ class PCMStitcher {
 class UserPipeline {
     constructor(ssrc) {
         this.ssrc = ssrc;
-        this.resampleOffset=0
+        this.chunkNumber=0
         this.jitterBuffer = new JitterBuffer();//stores RTP packets in correct sequence, required for decoder
         this.decoder = new OpusEncoder(16000, 1);//decoder instance
-        this.pcmBuffer = new PCMStitcher(16000,16000)//buffer that stores PCM packets, for 16000Hz,each PCM packet of length 640
+        this.pcmBuffer = new PCMStitcher(16000,640)//buffer that stores PCM packets, for 16000Hz,each PCM packet of length 640
         // this.pcmBuffer = new DownsampledChunkBuffer_Improved(48000, 16000, 16000) // creates PCM chunks for PCM packets worth 1 sec of audio
     }
 
@@ -119,14 +120,22 @@ class UserPipeline {
 
         while (count < maxPackets && (result = this.jitterBuffer.getNext()) !== null) {
             if (result === 'MISSING_PACKET') {
-                const samplesPerPacket = 960;
+                // console.log("Packets loosing")
+                const samplesPerPacket = 320;
                 const pcm = new Int16Array(samplesPerPacket); // zeros
+                // console.log(pcm.buffer)
                 this.pcmBuffer.write(pcm);
             } else {
                 const payload = this.getRtpPayload(result);
                 try{
-                    const pcm = this.decoder.decode(payload);
-                    // console.log(pcm.length)
+                    const pcm = this.decoder.decode(payload);//outputs 320 samples, each sample is 2 bytes, so pcm.length=640 bytes
+                    // console.log(pcm[0])
+                    //rate is 320 samples per 20ms, 
+                    // so total length of a 1 sec pcm chunk=
+                    // 320x(1000/20)ms=
+                    // 16000 samples per second=
+                    // 16000x2 bytes per sample=32000bytes for a 1 sec pcm chunk
+                    // console.log(pcm)
                     this.pcmBuffer.write(pcm);
                 }catch(e){
                     console.error(e)
@@ -140,7 +149,13 @@ class UserPipeline {
 
     getChunkIfReady() {
         const chunk=this.pcmBuffer.readChunk()
-        return chunk
+
+        if(!chunk) return null
+
+        return {
+          pcm_chunk:chunk,
+          chunkNumber:this.chunkNumber++ 
+        }
 
     }
 

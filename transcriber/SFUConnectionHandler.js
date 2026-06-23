@@ -77,11 +77,11 @@ class SFUConnectionHandler{
                 this.Rooms.delete(roomId)
                 this.HandleRoomClose(roomId, call_id)
                 
-                // if(this.Rooms.size==0){
-                //     if(this.ConvertChunksToWav){
-                //         this.ConvertChunksToWav()
-                //     }
-                // }
+                if(this.Rooms.size==0){
+                    if(this.ConvertChunksToWav){
+                        this.ConvertChunksToWav()
+                    }
+                }
                 console.log(chalk.magenta(`Deleted Room ${roomId}`))
                 console.log(roomId, call_info)
 

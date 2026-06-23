@@ -95,6 +95,7 @@ const TextArea=forwardRef((props, ref)=>{
     <div className="relative w-full flex flex-row items-center overflow-hidden">
       <textarea 
         ref={textareaRef}
+        // value={"\u0930\u094D"}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         name="ChatMessageBar" 

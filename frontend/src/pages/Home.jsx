@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { ArrowRight, Play, Check } from "lucide-react"
+import { ArrowRight, Play, Check, FileVideo2Icon, BotMessageSquare,Languages, Video } from "lucide-react"
 import { useAuth } from "../hooks/user_hooks"
+import ScrollBar from "./common components/ScrollBar"
 
 const WORDS = ["Smart", "Collaborative", "Shared"]
 
@@ -262,10 +263,15 @@ const Hero = ({ onGetStarted }) => {
     <section id="platform" className="relative pt-40 pb-20 overflow-hidden bg-[var(--sc-surface)]">
       <div className="max-w-7xl mx-auto px-8">
         {/* flex row: text left, image right */}
-        <div className="flex flex-col md:flex-row items-center gap-12">
+        <div className="relative flex flex-col md:flex-row items-center gap-12">
+
+          {/* <div className="absolute w-full h-full right-0 max-w-[50%]">
+            <img src="/assets/wooden_wall.png"
+            alt="" className="w-full h-full"/>
+          </div> */}
 
           {/* LEFT: Text content */}
-          <div className="flex-1 max-w-3xl">
+          <div className="relative flex-1 max-w-3xl">
 
             {/* Badge pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--sc-surface-container)] mb-8">
@@ -297,11 +303,11 @@ const Hero = ({ onGetStarted }) => {
           </div>
 
           {/* RIGHT: Image */}
-          <div className="w-full md:w-1/2 flex-shrink-0">
+          <div className="relative w-full md:w-1/2 flex-shrink-0">
             <img
               alt="Minimalist modern office interior"
               className="w-full h-80 md:h-[480px] object-cover rounded-2xl shadow-lg"
-              src="/assets/Landing.png"
+              src="/assets/Landing2.png"
             />
           </div>
 
@@ -417,9 +423,9 @@ const Features = () => {
 
 const CoreCapabilities = () => {
   const capabilities = [
-    { title: 'Real-time Canvas', description: 'Collaborate on documents and designs with millisecond latency. Visual communication evolved.', icon: 'edit_square', iconColor: 'bg-[var(--sc-primary)]/10 text-[var(--sc-primary)]' },
-    { title: 'Async Video', description: 'Record and share context-rich video updates that live alongside your project files.', icon: 'videocam', iconColor: 'bg-[var(--sc-tertiary)]/10 text-[var(--sc-tertiary)]' },
-    { title: 'Smart Scheduling', description: 'AI-driven focus blocks that automatically sync across team calendars for deep work.', icon: 'calendar_today', iconColor: 'bg-[var(--sc-primary)]/10 text-[var(--sc-primary)]' },
+    { title: 'MultilIngual Chatting', description: 'Chat seamlessly across Indian languages with real-time message translation.', iconColor: 'bg-[var(--sc-primary)]/10 text-[var(--sc-primary)]' },
+    { title: 'Audio-Video Calls', description: 'Stay connected with secure, real-time audio and video communication.', iconColor: 'bg-[var(--sc-tertiary)]/10 text-[var(--sc-tertiary)]' },
+    { title: 'Call Summaries', description: 'Never miss important details with automatically generated summaries of your calls.', iconColor: 'bg-[var(--sc-primary)]/10 text-[var(--sc-primary)]' },
   ]
 
   return (
@@ -427,14 +433,27 @@ const CoreCapabilities = () => {
       <div className="max-w-7xl mx-auto px-8">
         <div className="mb-16 text-center mx-auto">
           <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Core Capabilities</span>
-          <h2 className="text-4xl font-headline font-bold text-[var(--sc-on-surface)] mt-2 text-center">Tools for <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Modern Teams</span></h2>
+          <h2 className="text-4xl font-headline font-bold text-[var(--sc-on-surface)] mt-2 text-center"><span className="mr-2">Tools for </span> <span className="text-[var(--sc-tertiary)] font-['ItalicCustom'] font-semibold">Modern Teams</span></h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {capabilities.map((cap) => (
             <div key={cap.title} className="p-8 bg-[var(--sc-surface)] rounded-[2rem] border border-[var(--sc-outline-variant)]/10 hover:shadow-md transition-shadow">
               <div className={`w-12 h-12 ${cap.iconColor} rounded-xl flex items-center justify-center mb-6`}>
-                <span className="material-symbols-outlined">{cap.icon}</span>
+                <span className="material-symbols-outlined">
+                  {cap.title==="MultilIngual Chatting" &&
+                    <Languages/>
+                  }
+
+                  {cap.title==="Audio-Video Calls" &&
+                    <Video/>
+                  }
+
+                  {cap.title==="Call Summaries" &&
+                    <BotMessageSquare/>
+                  }
+                
+                </span>
               </div>
               <h4 className="text-xl font-bold mb-3 text-[var(--sc-on-surface)]">{cap.title}</h4>
               <p className="text-[var(--sc-on-surface-variant)] text-sm leading-relaxed">{cap.description}</p>
@@ -807,17 +826,27 @@ const Home = () => {
   const handleGetStarted = () => navigate('/login')
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[var(--sc-surface)] font-headline">
-      <IntroCanvas />
+    <div className="h-screen w-full flex flex-col bg-[var(--sc-surface)] font-headline">
+      {/* <IntroCanvas /> */}
       <Navigation onSignIn={handleSignIn} />
-      <Hero onGetStarted={handleGetStarted} />
-      <TrustedBy />
-      <Features />
-      <CoreCapabilities />
-      <HowItWorks />
-      <Testimonials />
-      <MeetTheTeam />
-      <Footer />
+
+      <div className="py-0! flex-1 w-full relative overflow-y-auto custom-scrollbar">
+        <ScrollBar>
+          <div className="w-full flex flex-col items-center justify-center">
+            <div className="space-y-0 flex flex-col px-8 w-full bg-transparent">
+              <Hero onGetStarted={handleGetStarted} />
+              {/* <TrustedBy /> */}
+              <Features />
+              <CoreCapabilities />
+              <HowItWorks />
+              <Testimonials />
+              <MeetTheTeam />
+              <Footer />
+            </div>
+          </div>
+        </ScrollBar>
+      </div>
+
     </div>
   )
 }

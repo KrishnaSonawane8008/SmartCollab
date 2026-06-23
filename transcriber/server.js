@@ -22,7 +22,8 @@ SFUConnectionHandler.connect({
                                 SFU_URL:SFU_URL, 
                                 Remove_Pipeline,
                                 HandleRoomClose, 
-                                CreateChunkStoreRoom
+                                CreateChunkStoreRoom,
+                                ConvertChunksToWav
                               })
 
 
@@ -36,7 +37,7 @@ const liveAudioService = new LiveAudioService({
 
 socket.on('message', (msg)=>{
   const ssrc=msg.readUint32BE(8);
-  // console.log(ssrc)
+  // console.log(msg)
   const sequenceNumber = msg.readUInt16BE(2);
   
   const PacketInfo=SFUConnectionHandler.PacketInfo.get(ssrc)
@@ -55,7 +56,7 @@ socket.on('message', (msg)=>{
 
 socket.bind(PORT)
 
-
+let count=0
 
 setInterval(() => {
   for (const [ssrc, pipeline] of Pipelines) {
@@ -70,21 +71,24 @@ setInterval(() => {
 
     const AllRoomChunks=AllChunks_Roomwise.get(roomId)
     
-    if (chunk) {
+    if (chunk?.pcm_chunk) {
 
-      if(AllRoomChunks){
-        AllRoomChunks.push(chunk)
+      if(!AllRoomChunks.has(count)){
+        AllRoomChunks.set(count, [])
       }
       
+      AllRoomChunks.get(count).push(chunk.pcm_chunk)
+
       liveAudioService.handleAudioChunk(
         roomId,
         UserId,
-        chunk,
+        chunk.pcm_chunk,
         TimeStamp
       );
     }
   }
-}, 10);// call every 10ms
+  count++
+}, 20);// call every 10ms
 
 function Remove_Pipeline(ssrc){
   Pipelines.delete(ssrc)
@@ -120,14 +124,15 @@ function HandleRoomClose(roomId, call_id){
 const AllChunks_Roomwise=new Map()
 
 function CreateChunkStoreRoom(roomId){
-  AllChunks_Roomwise.set(roomId, [])
+  AllChunks_Roomwise.set(roomId, new Map())
 }
 
-// function ConvertChunksToWav(){
-//   for(const [roomId, AllChunks] of AllChunks_Roomwise){
-//     writeChunksToWav(AllChunks, `Room${roomId}_Audio.wav`, 16000);
-//   }
-// }
+function ConvertChunksToWav(){
+  for(const [roomId, AllChunks] of AllChunks_Roomwise){
+    // console.log(AllChunks)
+    writeChunksToWav(AllChunks, `Room${roomId}_Audio.wav`, 16000);
+  }
+}
 
 //===================================================================
 
