@@ -1,10 +1,12 @@
 import { useState, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { LogoutUser } from '../../../../services/user_services'
 import { Languages, LogOut, ChevronDown, Check, X } from 'lucide-react'
 import FloatingDiv from '../../../common components/FloatingDiv'
 import { Global_Context } from '../../../../contexts/Global-context-provider'
 import { change_preferred_language } from '../../../../services/user_services'
+import { useQueryClient } from '@tanstack/react-query'
+import chalk from 'chalk'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -36,6 +38,8 @@ const LANGUAGES = [
 
 
 const UserProfile = ({ username, email }) => {
+  const queryClient=useQueryClient()
+  const {communityId, channelId} = useParams()
   const navigate = useNavigate()
   const { setLoggedOut, UserData, setUserData, LanguageChanged, setLanguageChanged } = useContext(Global_Context)
   const [language, setLanguage] = useState(UserData?.preferred_language || "en")
@@ -64,6 +68,8 @@ const UserProfile = ({ username, email }) => {
     change_preferred_language(pendingLang).then((response)=>{
       // console.log("Changed Language")
       if(response.Success===true){
+        queryClient?.removeQueries({queryKey:["messages"],exact:false})
+        queryClient?.removeQueries({queryKey:["translated_message"],exact:false})
         setLanguage(pendingLang)
         setUserData(prev=>({...prev, preferred_language:pendingLang} ))
         setLanguageChanged(pendingLang)

@@ -1,63 +1,32 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext } from "react"
 import { translate } from "../../../services/translation_service"
 import { Loader2 } from "lucide-react"
 import { Global_Context } from "../../../contexts/Global-context-provider"
 import { useQuery } from "@tanstack/react-query"
 
-const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null,sender_name=null, sent_at = null, is_new_message=null }) => {
+const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null, sender_name = null, sent_at = null, is_new_message = null }) => {
 
-  const [rendered_message, setMessage]=useState(message)
-  // const [translation_loading, setTranslationLoading]=useState(false)
-  const {UserData}=useContext(Global_Context)
+  const { UserData } = useContext(Global_Context)
 
-  const {data, isLoading, isError, error, refetch, isFetching}=useQuery({
-    queryKey: ["translated_message", message, unique_id || UserData?.preferred_language || "en"],
-    queryFn: ()=>{ return translate(message, UserData?.preferred_language || "en")},
+  const { data, isError, isFetching } = useQuery({
+    queryKey: ["translated_message", message, UserData?.preferred_language],
+    queryFn: () => { return translate(message, UserData?.preferred_language) },
     enabled: !!is_new_message,
     staleTime: Infinity
   })
 
-  const formatTime = (ts) => {
-    if (!ts) return ''
-    try {
-      return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    } catch {
-      return ''
-    }
-  }
+  // FIX: Compute active text dynamically on every render pass
+  // Displays the translated result if ready, falls back instantly to raw message otherwise
+  const activeMessageText = data?.translated ? data.translated : message
 
-  let sent_time=null
-  if(sent_at && typeof(sent_at)=="string"){
+  let sent_time = null
+  if (sent_at && typeof sent_at == "string") {
     const dateObj = new Date(sent_at);
-    const date = dateObj.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-    const time = dateObj.toLocaleTimeString('en-IN', {
+    sent_time = dateObj.toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit'
     });
-    sent_time=time
-    // console.log( date, time)
   }
-
-  // translate(message, "hi").then((result)=>{
-  //   setMessage(result.translated)
-  // }).catch((e)=>{
-  //   console.error(e)
-  // })
-  useEffect(()=>{
-    if(!data) return
-    if(data.translated){
-      setMessage(data.translated)
-    }else{
-      setMessage(message)
-    }
-    
-  }, [data])
-  
-
 
   return (
     message && (
@@ -65,18 +34,17 @@ const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null,
         {fromUser ? (
           <div className="flex justify-end w-full">
             <div className="bg-[#F4E6C8] text-[#2F5D50] px-4 py-2 rounded-2xl rounded-br-none max-w-[70%] shadow-sm">
-              {isError?(<>{message}</>):
-                isFetching?(
-                  <div className="flex flex-row items-center">
-                  <Loader2 className=" animate-spin size-3 m-1"/>
-                  {rendered_message}
-                  </div>
-                ):(
-                <>
-                  {rendered_message}
-                </>
-                )
-              }
+              {isError ? (
+                <>{message}</>
+              ) : isFetching ? (
+                <div className="flex flex-row items-center">
+                  <Loader2 className="animate-spin size-3 m-1" />
+                  {/* Instantly shows current raw text prop instead of stale state */}
+                  {message} 
+                </div>
+              ) : (
+                <>{activeMessageText}</>
+              )}
               <div className="font-[Inter] pt-1 text-[0.6rem] w-full flex justify-end">
                 {sent_time}
               </div>
@@ -85,22 +53,18 @@ const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null,
         ) : (
           <div className="flex justify-start w-full">
             <div className="bg-[#2F5D50] text-white px-4 py-2 rounded-2xl rounded-bl-none max-w-[70%] shadow-sm">
-              <div className="text-[0.7rem] pb-1">
-                {sender_name}
-              </div>
+              <div className="text-[0.7rem] pb-1">{sender_name}</div>
 
-              {
-                isFetching?(
-                  <div className="flex flex-row items-center">
-                  <Loader2 className=" animate-spin size-3 m-1"/>
-                  {rendered_message}
-                  </div>
-                ):(
-                <>
-                  {rendered_message}
-                </>
-                )
-              }
+              {isError ? (
+                <>{message}</>
+              ) : isFetching ? (
+                <div className="flex flex-row items-center">
+                  <Loader2 className="animate-spin size-3 m-1" />
+                  {message}
+                </div>
+              ) : (
+                <>{activeMessageText}</>
+              )}
               <div className="font-[Inter] pt-2 text-[0.6rem] w-full flex justify-start">
                 {sent_time}
               </div>

@@ -117,7 +117,7 @@ const OptionsBar = ({CommunityName, CommunityId, queryClient, refetchChannels}) 
                             LeftCommunity_cb(CommunityId)
                             setLeftCommunityRender(!LeftCommunityRender)
                             queryClient.removeQueries({queryKey: ["community_channels", CommunityId]})
-                            queryClient.removeQueries({queryKey: ["messages", CommunityId]})
+                            queryClient.removeQueries({queryKey: ["messages", CommunityId],exact:false})
                           }
                         }).catch((e)=>{
                           console.error(e)
@@ -213,7 +213,7 @@ const ChannelsPanel = () => {
 
   useEffect(()=>{
     if(!LeftChannel?.communityId || !LeftChannel?.channelId) return
-    queryClient?.removeQueries({queryKey:["messages", LeftChannel.communityId, LeftChannel.channelId]})
+    queryClient?.removeQueries({queryKey:["messages", LeftChannel.communityId, LeftChannel.channelId],exact:false})
     refetch()
   },[LeftChannel, LeftChannelRender])
 

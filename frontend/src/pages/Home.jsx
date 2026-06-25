@@ -260,55 +260,65 @@ const AnimatedWord = ({ onGetStarted }) => {
 
 const Hero = ({ onGetStarted }) => {
   return (
-    <section id="platform" className="relative pt-40 pb-20 overflow-hidden bg-[var(--sc-surface)]">
+    <section id="platform" className="relative px-8 pt-40 pb-20 bg-[var(--sc-surface)]">
+      <div className="absolute w-full h-full top-0 right-0 max-w-[50%] opacity-50 bg-[#eaeaea]">
+        <img 
+          src="/assets/wooden_wall.png" 
+          alt="Wooden wall background" 
+          className="w-full h-full object-cover"
+        />
+        {/* The colored gradient overlay */}
+        <div className="absolute w-full h-full bottom-0 max-h-[10%] bg-gradient-to-b from-transparent to-[#fcf9f8]" />
+      </div>
+
+
+
       <div className="max-w-7xl mx-auto px-8">
         {/* flex row: text left, image right */}
-        <div className="relative flex flex-col md:flex-row items-center gap-12">
-
-          {/* <div className="absolute w-full h-full right-0 max-w-[50%]">
-            <img src="/assets/wooden_wall.png"
-            alt="" className="w-full h-full"/>
-          </div> */}
+        <div className="relative flex w-full flex-row items-center  w-full">
 
           {/* LEFT: Text content */}
-          <div className="relative flex-1 max-w-3xl">
+          <div className="relative w-[50%] ">
+            <div className="w-full">
+              {/* Badge pill */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--sc-surface-container)] mb-8">
+                <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--sc-primary)]">Next-Gen Productivity</span>
+                <span className="w-1 h-1 rounded-full bg-[var(--sc-tertiary)]" />
+                <span className="text-[10px] font-medium text-[var(--sc-on-surface-variant)] uppercase text-[var(--sc-tertiary)] font-['ItalicCustom']">Live Sync v2.0</span>
+              </div>
 
-            {/* Badge pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--sc-surface-container)] mb-8">
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--sc-primary)]">Next-Gen Productivity</span>
-              <span className="w-1 h-1 rounded-full bg-[var(--sc-tertiary)]" />
-              <span className="text-[10px] font-medium text-[var(--sc-on-surface-variant)] uppercase text-[var(--sc-tertiary)] font-['ItalicCustom']">Live Sync v2.0</span>
-            </div>
+              {/* 3 clean lines */}
+              <h1 className="font-headline text-5xl md:text-6xl font-bold text-[var(--sc-on-surface)] leading-tight tracking-tight mb-8 space-y-1">
+                <div>The Future Of</div>
+                <div><AnimatedWord onGetStarted={onGetStarted} /></div>
+                <div>Work.</div>
+              </h1>
 
-            {/* 3 clean lines */}
-            <h1 className="font-headline text-5xl md:text-6xl font-bold text-[var(--sc-on-surface)] leading-tight tracking-tight mb-8 space-y-1">
-              <div>The Future Of</div>
-              <div><AnimatedWord onGetStarted={onGetStarted} /></div>
-              <div>Work.</div>
-            </h1>
+              <p className="text-xl text-[var(--sc-on-surface-variant)] leading-relaxed mb-12">
+                Unified communication and rhythmic productivity for high-performing teams. Orchestrate projects with intentionality and aesthetic precision.
+              </p>
 
-            <p className="text-xl text-[var(--sc-on-surface-variant)] leading-relaxed mb-12">
-              Unified communication and rhythmic productivity for high-performing teams. Orchestrate projects with intentionality and aesthetic precision.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={onGetStarted}
-                className="bg-[var(--sc-primary)] text-[var(--sc-on-primary)] px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:shadow-lg transition-all"
-              >
-                Explore
-                <span className="material-symbols-outlined text-xl">arrow_forward</span>
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={onGetStarted}
+                  className="bg-[var(--sc-primary)] text-[var(--sc-on-primary)] px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+                >
+                  Explore
+                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* RIGHT: Image */}
-          <div className="relative w-full md:w-1/2 flex-shrink-0">
+          <div className="relative w-[50%] flex-shrink-0">
+            <div className="w-full max-w-[90%] md:aspect-square aspect-auto mx-auto overflow-hidden">
             <img
               alt="Minimalist modern office interior"
-              className="w-full h-80 md:h-[480px] object-cover rounded-2xl shadow-lg"
+              className="w-full h-full object-cover rounded-2xl shadow-lg"
               src="/assets/Landing2.png"
             />
+            </div>
           </div>
 
         </div>
@@ -833,8 +843,10 @@ const Home = () => {
       <div className="py-0! flex-1 w-full relative overflow-y-auto custom-scrollbar">
         <ScrollBar>
           <div className="w-full flex flex-col items-center justify-center">
-            <div className="space-y-0 flex flex-col px-8 w-full bg-transparent">
+            <div className="space-y-0 flex flex-col w-full bg-transparent">
               <Hero onGetStarted={handleGetStarted} />
+            </div>
+            <div className="space-y-0 flex flex-col px-8 w-full bg-transparent">
               {/* <TrustedBy /> */}
               <Features />
               <CoreCapabilities />
