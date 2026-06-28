@@ -73,7 +73,7 @@ class PCMStitcher {
     
 
     this.buffer.push(...pcmFrame);
-    console.log(this.buffer.length)
+    // console.log(this.buffer.length)
     if (this.buffer.length >= this.chunkSize) {
       const chunk = new Buffer.from(this.buffer.slice(0, this.chunkSize));
 

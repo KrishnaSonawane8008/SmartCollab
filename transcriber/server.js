@@ -28,7 +28,7 @@ SFUConnectionHandler.connect({
 
 
 const Pipelines=new Map()
-
+let pipeline_ssrc=0
 const liveAudioService = new LiveAudioService({
   bufferDuration: 8000, // 8 seconds
   maxConcurrent: 2,
@@ -47,6 +47,7 @@ socket.on('message', (msg)=>{
   if(!pipeline){
     pipeline=new UserPipeline()
     Pipelines.set(ssrc, pipeline)
+    pipeline_ssrc=ssrc
   }
 
   pipeline.handleRtpPacket(msg, sequenceNumber)
@@ -59,10 +60,11 @@ socket.bind(PORT)
 let count=0
 
 setInterval(() => {
-  for (const [ssrc, pipeline] of Pipelines) {
-    // console.log(`ssrc: ${ssrc}`)
+    const pipeline=Pipelines.get(pipeline_ssrc)
+    if(!pipeline) return
+  // console.log(`ssrc: ${ssrc}`)
     pipeline.process(10); // limit work per tick
-    const PacketInfo=SFUConnectionHandler.PacketInfo.get(ssrc)
+    const PacketInfo=SFUConnectionHandler.PacketInfo.get(pipeline_ssrc)
     if(!PacketInfo) return
 
     const {roomId, UserId, UserName}=PacketInfo
@@ -86,7 +88,35 @@ setInterval(() => {
         TimeStamp
       );
     }
-  }
+
+  // for (const [ssrc, pipeline] of Pipelines) {
+  //   // console.log(`ssrc: ${ssrc}`)
+  //   pipeline.process(10); // limit work per tick
+  //   const PacketInfo=SFUConnectionHandler.PacketInfo.get(ssrc)
+  //   if(!PacketInfo) return
+
+  //   const {roomId, UserId, UserName}=PacketInfo
+  //   const TimeStamp=Date.now()
+  //   const chunk = pipeline.getChunkIfReady();
+
+  //   const AllRoomChunks=AllChunks_Roomwise.get(roomId)
+    
+  //   if (chunk?.pcm_chunk) {
+
+  //     if(!AllRoomChunks.has(count)){
+  //       AllRoomChunks.set(count, [])
+  //     }
+      
+  //     AllRoomChunks.get(count).push(chunk.pcm_chunk)
+
+  //     liveAudioService.handleAudioChunk(
+  //       roomId,
+  //       UserId,
+  //       chunk.pcm_chunk,
+  //       TimeStamp
+  //     );
+  //   }
+  // }
   count++
 }, 20);// call every 10ms
 
