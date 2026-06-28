@@ -115,7 +115,7 @@ setInterval(() => {
           PipeLines_tobeDeleted.delete(`${roomId}_${UserId}`)
         }else{
           const Jbuffer=pipeline.jitterBuffer.getJitterBuffer()
-          console.log(chalk.cyan(`User${UserId} Jitter buffer Length: ${pipeline.getJBlength()}, ${Jbuffer.values()}`))
+          // console.log(chalk.cyan(`User${UserId} Jitter buffer Length: ${pipeline.getJBlength()}, ${Jbuffer.values()}`))
         }
       }
 
@@ -189,7 +189,7 @@ function CreateChunkStoreRoom(roomId){
 function ConvertChunksToWav(){
   for(const [roomId, AllChunks] of AllChunks_Roomwise){
     // console.log(AllChunks)
-    writeChunksToWav(AllChunks, `Room${roomId}_Audio.wav`, 48000);
+    writeChunksToWav(AllChunks, `Room${roomId.split("_")[0]}_Audio.wav`, 48000);
   }
 }
 

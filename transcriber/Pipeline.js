@@ -9,13 +9,32 @@ class JitterBuffer {
     this.maxWaitMs = 50; // tweak: 20–100ms typical
   }
 
+  // insert(packet, seq) {
+  //   this.buffer.set(seq, {
+  //     packet,
+  //     time: Date.now()
+  //   });
+
+  //   if (this.expectedSeq === null) {
+  //     this.expectedSeq = seq;
+  //   }
+  // }
+  
   insert(packet, seq) {
     this.buffer.set(seq, {
-      packet,
-      time: Date.now()
+        packet,
+        time: Date.now()
     });
 
-    if (this.expectedSeq === null) {
+    if (this.expectedSeq !== null) {
+        const gap = (seq - this.expectedSeq + 65536) & 0xffff;
+
+        if (gap > 20) {
+            console.log("Resyncing jitter buffer");
+            this.expectedSeq = seq;
+            this.buffer.clear();
+        }
+    }else{
       this.expectedSeq = seq;
     }
   }
@@ -127,6 +146,15 @@ class UserPipeline {
     process(maxPackets = 10) {
         let count = 0;
         let result;
+
+        // console.log(
+        //     "size:",
+        //     this.jitterBuffer.getLength(),
+        //     "expected:",
+        //     this.jitterBuffer.expectedSeq,
+        //     "stored:",
+        //     [...this.jitterBuffer.getJitterBuffer().keys()].length
+        // );
 
         while (count < maxPackets && (result = this.jitterBuffer.getNext()) !== null) {
             if (result === 'MISSING_PACKET') {
