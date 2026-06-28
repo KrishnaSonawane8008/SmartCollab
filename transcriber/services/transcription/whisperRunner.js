@@ -5,9 +5,11 @@ const { promisify } = require('util');
 const execAsync = promisify(exec);
 
 class WhisperRunner {
-  constructor(modelPath = 'whisper/models/ggml-base.en.bin') {
+  constructor(modelPath = 'whisper/models/ggml-base.en.bin', enable_logs=true) {
     this.modelPath = modelPath;
     this.timeout = 300000; // 5 minutes default timeout
+    this.enable_logs=enable_logs
+    console.log("[WhisperRunner]:", enable_logs)
   }
 
   async transcribe(filePath, onProcessSpawned) {
@@ -38,7 +40,7 @@ class WhisperRunner {
         '-ng'            // Force CPU mode (no GPU)
       ];
       
-      console.log(`[WhisperRunner] Executing: ${whisperBinary} ${args.join(' ')}`);
+      if(this.enable_logs===true)console.log(`[WhisperRunner] Executing: ${whisperBinary} ${args.join(' ')}`);
       
       // Spawn whisper process
       const whisperProcess = spawn(whisperBinary, args, {
@@ -70,7 +72,7 @@ class WhisperRunner {
       whisperProcess.on('close', async (code) => {
         const processingTime = Date.now() - startTime;
         
-        console.log(`[WhisperRunner] Process exited with code ${code} in ${processingTime}ms`);
+        if(this.enable_logs===true)console.log(`[WhisperRunner] Process exited with code ${code} in ${processingTime}ms`);
         
         if (code === 0) {
           try {
@@ -132,11 +134,11 @@ class WhisperRunner {
       const data = JSON.parse(jsonContent);
       
       // Log the entire parsed object for debugging
-      console.log("[WhisperRunner] Full JSON structure:");
-      console.log(JSON.stringify(data, null, 2).substring(0, 2000));
+      if(this.enable_logs===true)console.log("[WhisperRunner] Full JSON structure:");
+      if(this.enable_logs===true)console.log(JSON.stringify(data, null, 2).substring(0, 2000));
       
       // Log top-level keys
-      console.log("[WhisperRunner] JSON top-level keys:", Object.keys(data));
+      if(this.enable_logs===true)console.log("[WhisperRunner] JSON top-level keys:", Object.keys(data));
       
       const result = {
         segments: [],
@@ -164,12 +166,12 @@ class WhisperRunner {
         segmentsSource = 'data.results';
       }
       
-      console.log("[WhisperRunner] Segments source:", segmentsSource || 'none found');
-      console.log("[WhisperRunner] Segments found:", segments ? segments.length : 0);
+      if(this.enable_logs===true)console.log("[WhisperRunner] Segments source:", segmentsSource || 'none found');
+      if(this.enable_logs===true)console.log("[WhisperRunner] Segments found:", segments ? segments.length : 0);
       
       if (segments && segments.length > 0) {
         // Log first segment for verification
-        console.log("[WhisperRunner] First segment raw:", JSON.stringify(segments[0]));
+        if(this.enable_logs===true)console.log("[WhisperRunner] First segment raw:", JSON.stringify(segments[0]));
         
         segments.forEach((segment, index) => {
           // Normalize segment format
@@ -208,7 +210,7 @@ class WhisperRunner {
           
           // Log first few segments for debugging
           if (index < 3) {
-            console.log(`[WhisperRunner] Segment ${index}: start=${start}, end=${end}, text="${text.substring(0, 50)}..."`);
+            if(this.enable_logs===true)console.log(`[WhisperRunner] Segment ${index}: start=${start}, end=${end}, text="${text.substring(0, 50)}..."`);
           }
         });
       }
@@ -216,8 +218,8 @@ class WhisperRunner {
       // Extract full text from various possible fields
       result.text = (data.text || data.transcript || data.content || data.utterance || '').trim();
       
-      console.log("[WhisperRunner] Total segments extracted:", result.segments.length);
-      console.log("[WhisperRunner] Full text length:", result.text.length);
+      if(this.enable_logs===true)console.log("[WhisperRunner] Total segments extracted:", result.segments.length);
+      if(this.enable_logs===true)console.log("[WhisperRunner] Full text length:", result.text.length);
 
       return result;
     } catch (error) {
@@ -253,8 +255,8 @@ class WhisperRunner {
   static async testWhisperBinary() {
     try {
       const whisperBinary = path.join(process.cwd(), 'whisper', 'whisper');
-      console.log(`[WhisperRunner] Testing binary at: ${whisperBinary}`);
-      console.log(`[WhisperRunner] Binary exists: ${fs.existsSync(whisperBinary)}`);
+      if(this.enable_logs===true)console.log(`[WhisperRunner] Testing binary at: ${whisperBinary}`);
+      if(this.enable_logs===true)console.log(`[WhisperRunner] Binary exists: ${fs.existsSync(whisperBinary)}`);
       
       if (!fs.existsSync(whisperBinary)) {
         console.error(`[WhisperRunner] Binary not found at ${whisperBinary}`);
@@ -275,9 +277,9 @@ class WhisperRunner {
 
       return new Promise((resolve, reject) => {
         testProcess.on('close', (code) => {
-          console.log(`[WhisperRunner] Test -h exited with code ${code}`);
-          if (output) console.log(`[WhisperRunner] Test stdout: ${output.substring(0, 500)}`);
-          if (errorOutput) console.log(`[WhisperRunner] Test stderr: ${errorOutput.substring(0, 500)}`);
+          if(this.enable_logs===true)console.log(`[WhisperRunner] Test -h exited with code ${code}`);
+          if (output) if(this.enable_logs===true)console.log(`[WhisperRunner] Test stdout: ${output.substring(0, 500)}`);
+          if (errorOutput) if(this.enable_logs===true)console.log(`[WhisperRunner] Test stderr: ${errorOutput.substring(0, 500)}`);
           
           if (code === 0) {
             resolve(true);

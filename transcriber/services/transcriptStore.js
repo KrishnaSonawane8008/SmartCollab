@@ -7,6 +7,10 @@ const fs = require('fs');
 const path = require('path');
 
 const roomTranscripts = {};
+let TS_logs=true
+function setTSLogs(enabled=true){
+  TS_logs=enabled
+}
 
 /**
  * Initialize room if it doesn't exist
@@ -57,7 +61,7 @@ function addSegment(roomId, segment) {
   
   // Check for duplicate
   if (_segmentExists(roomId, segment)) {
-    console.log(`[TranscriptStore] Duplicate segment detected for room ${roomId}`);
+    if(TS_logs===true)console.log(`[TranscriptStore] Duplicate segment detected for room ${roomId}`);
     return false;
   }
   
@@ -133,7 +137,7 @@ function saveRoomTranscriptToFile(roomId, outputDir) {
   const transcript = getRoomTranscript(roomId);
   
   if (!transcript || transcript.length === 0) {
-    console.log(`[TranscriptStore] No transcript to save for room ${roomId}`);
+    if(TS_logs===true)console.log(`[TranscriptStore] No transcript to save for room ${roomId}`);
     return null;
   }
   
@@ -172,8 +176,8 @@ function saveRoomTranscriptToFile(roomId, outputDir) {
   // Write JSON file
   fs.writeFileSync(filePath, JSON.stringify(transcriptData, null, 2), 'utf8');
   
-  console.log(`[TranscriptStore] Saved transcript to ${filePath}`);
-  console.log(`[TranscriptStore] Total segments: ${transcript.length}, Duration: ${transcriptData.duration.total.toFixed(2)}s`);
+  if(TS_logs===true)console.log(`[TranscriptStore] Saved transcript to ${filePath}`);
+  if(TS_logs===true)console.log(`[TranscriptStore] Total segments: ${transcript.length}, Duration: ${transcriptData.duration.total.toFixed(2)}s`);
   
   return { filePath, filename };
 }
@@ -185,5 +189,6 @@ module.exports = {
   clearRoom,
   getSegmentCount,
   getAllRooms,
-  saveRoomTranscriptToFile
+  saveRoomTranscriptToFile,
+  setTSLogs
 };

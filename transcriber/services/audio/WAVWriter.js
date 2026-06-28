@@ -6,7 +6,7 @@ const writeAsync = promisify(fs.write);
 const closeAsync = promisify(fs.close);
 
 class WAVWriter {
-  constructor(filePath, sampleRate = 16000, channels = 1) {
+  constructor(filePath, sampleRate = 16000, channels = 1, WAVW_logs=true) {
     this.filePath = path.resolve(filePath); // Ensure absolute path
     this.sampleRate = sampleRate;
     this.channels = channels;
@@ -16,14 +16,15 @@ class WAVWriter {
     this.dataSize = 0;
     this.fileStream = null;
     this.isFinalized = false;
-    
-    console.log(`[WAVWriter] Creating file: ${this.filePath}`);
+    this.WAVW_logs=WAVW_logs
+
+    if(this.WAVW_logs===true)console.log(`[WAVWriter] Creating file: ${this.filePath}`);
     
     // Create directories if they don't exist
     const dir = path.dirname(this.filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-      console.log(`[WAVWriter] Created directory: ${dir}`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Created directory: ${dir}`);
     }
     
     // Initialize file stream
@@ -78,7 +79,7 @@ class WAVWriter {
       if (absInt > maxInt) maxInt = absInt;
     }
     
-    console.log(`[WAVWriter] Writing ${pcmData.length} samples: max float=${maxFloat.toFixed(4)}, max int16=${maxInt}`);
+    if(this.WAVW_logs===true)console.log(`[WAVWriter] Writing ${pcmData.length} samples: max float=${maxFloat.toFixed(4)}, max int16=${maxInt}`);
     
     const buffer = Buffer.from(int16Data.buffer);
     this.fileStream.write(buffer);
@@ -91,7 +92,7 @@ class WAVWriter {
    */
   async finalize() {
     if (this.isFinalized) {
-      console.log(`[WAVWriter] Already finalized: ${this.filePath}`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Already finalized: ${this.filePath}`);
       return this.filePath;
     }
 
@@ -99,8 +100,8 @@ class WAVWriter {
       throw new Error('File stream is not initialized');
     }
 
-    console.log(`[WAVWriter] Starting finalize for: ${this.filePath}`);
-    console.log(`[WAVWriter] Data size: ${this.dataSize} bytes`);
+    if(this.WAVW_logs===true)console.log(`[WAVWriter] Starting finalize for: ${this.filePath}`);
+    if(this.WAVW_logs===true)console.log(`[WAVWriter] Data size: ${this.dataSize} bytes`);
 
     // Close the write stream and wait for it to finish
     await this._closeStream();
@@ -111,7 +112,7 @@ class WAVWriter {
     this.isFinalized = true;
     this.fileStream = null;
 
-    console.log(`[WAVWriter] Finalize complete: ${this.filePath}`);
+    if(this.WAVW_logs===true)console.log(`[WAVWriter] Finalize complete: ${this.filePath}`);
     
     return this.filePath;
   }
@@ -129,7 +130,7 @@ class WAVWriter {
 
       // Listen for finish event
       this.fileStream.once('finish', () => {
-        console.log(`[WAVWriter] Write stream finished: ${this.filePath}`);
+        if(this.WAVW_logs===true)console.log(`[WAVWriter] Write stream finished: ${this.filePath}`);
         resolve();
       });
 
@@ -157,17 +158,17 @@ class WAVWriter {
     try {
       // Open file for reading and writing
       fd = await openAsync(this.filePath, 'r+');
-      console.log(`[WAVWriter] Opened file descriptor for header update: ${this.filePath}`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Opened file descriptor for header update: ${this.filePath}`);
 
       // Update RIFF chunk size at offset 4 (4 bytes)
       headerBuffer.writeUInt32LE(fileSize, 0);
       await writeAsync(fd, headerBuffer, 0, 4, 4);
-      console.log(`[WAVWriter] Updated RIFF chunk size: ${fileSize} bytes`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Updated RIFF chunk size: ${fileSize} bytes`);
 
       // Update data chunk size at offset 40 (4 bytes)
       headerBuffer.writeUInt32LE(this.dataSize, 0);
       await writeAsync(fd, headerBuffer, 0, 4, 40);
-      console.log(`[WAVWriter] Updated data chunk size: ${this.dataSize} bytes`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Updated data chunk size: ${this.dataSize} bytes`);
 
     } catch (error) {
       console.error(`[WAVWriter] Header update error: ${error.message}`);
@@ -177,7 +178,7 @@ class WAVWriter {
       if (fd !== null) {
         try {
           await closeAsync(fd);
-          console.log(`[WAVWriter] Closed file descriptor: ${this.filePath}`);
+          if(this.WAVW_logs===true)console.log(`[WAVWriter] Closed file descriptor: ${this.filePath}`);
         } catch (closeError) {
           console.error(`[WAVWriter] Error closing file descriptor: ${closeError.message}`);
         }
@@ -190,7 +191,7 @@ class WAVWriter {
    */
   close() {
     if (this.fileStream && !this.isFinalized) {
-      console.log(`[WAVWriter] Closing stream (cleanup): ${this.filePath}`);
+      if(this.WAVW_logs===true)console.log(`[WAVWriter] Closing stream (cleanup): ${this.filePath}`);
       this.fileStream.end();
       this.fileStream = null;
     }

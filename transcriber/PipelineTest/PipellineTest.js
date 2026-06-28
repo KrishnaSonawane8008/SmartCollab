@@ -14,13 +14,15 @@ function writeChunksToWav(allChunks, filePath, sampleRate = 16000) {
     fileWriter.end();
     return;
   }
+  let highest_sample=0
+  let lowest_sample=0
 
   // Ensure chunk numbers are written in order
   const chunkNumbers = [...allChunks.keys()].sort((a, b) => a - b);
 
   for (const chunkNumber of chunkNumbers) {
     const chunks = allChunks.get(chunkNumber);
-
+    // console.log(chunks)
     if (!chunks || chunks.length === 0) {
       continue;
     }
@@ -38,7 +40,9 @@ function writeChunksToWav(allChunks, filePath, sampleRate = 16000) {
       }
 
       // Average to avoid clipping
-      let sample = Math.round(sum / chunks.length);
+      let sample = Math.round(sum/chunks.length);
+      if(sample>highest_sample) highest_sample=sample
+      if(sample<lowest_sample) lowest_sample=sample
 
       if (sample > 32767) sample = 32767;
       if (sample < -32768) sample = -32768;
@@ -48,7 +52,7 @@ function writeChunksToWav(allChunks, filePath, sampleRate = 16000) {
 
     fileWriter.write(mixed);
   }
-
+  
   fileWriter.end();
 }
 

@@ -20,6 +20,14 @@ class JitterBuffer {
     }
   }
 
+  getLength(){
+    return this.buffer.size
+  }
+
+  getJitterBuffer(){
+    return this.buffer
+  }
+
   getNext() {
     if (this.expectedSeq === null) return null;
 
@@ -73,7 +81,7 @@ class PCMStitcher {
     
 
     this.buffer.push(...pcmFrame);
-    console.log(this.buffer.length)
+    // console.log(this.buffer.length)
     if (this.buffer.length >= this.chunkSize) {
       const chunk = new Buffer.from(this.buffer.slice(0, this.chunkSize));
 
@@ -104,8 +112,8 @@ class UserPipeline {
         this.ssrc = ssrc;
         this.chunkNumber=0
         this.jitterBuffer = new JitterBuffer();//stores RTP packets in correct sequence, required for decoder
-        this.decoder = new OpusEncoder(16000, 1);//decoder instance
-        this.pcmBuffer = new PCMStitcher(16000,640)//buffer that stores PCM packets, for 16000Hz,each PCM packet of length 640
+        this.decoder = new OpusEncoder(48000, 1);//decoder instance
+        this.pcmBuffer = new PCMStitcher(48000,1920)//buffer that stores PCM packets, for 16000Hz,each PCM packet of length 640
         // this.pcmBuffer = new DownsampledChunkBuffer_Improved(48000, 16000, 16000) // creates PCM chunks for PCM packets worth 1 sec of audio
     }
 
@@ -113,7 +121,9 @@ class UserPipeline {
         this.jitterBuffer.insert(packet, seq);
     }
 
-
+    getJBlength(){
+      return this.jitterBuffer.getLength()
+    }
     process(maxPackets = 10) {
         let count = 0;
         let result;
@@ -121,7 +131,7 @@ class UserPipeline {
         while (count < maxPackets && (result = this.jitterBuffer.getNext()) !== null) {
             if (result === 'MISSING_PACKET') {
                 // console.log("Packets loosing")
-                const samplesPerPacket = 320;
+                const samplesPerPacket = 960;
                 const pcm = new Int16Array(samplesPerPacket); // zeros
                 // console.log(pcm.buffer)
                 this.pcmBuffer.write(pcm);
@@ -135,7 +145,7 @@ class UserPipeline {
                     // 320x(1000/20)ms=
                     // 16000 samples per second=
                     // 16000x2 bytes per sample=32000bytes for a 1 sec pcm chunk
-                    // console.log(pcm)
+                    // console.log(pcm.length)
                     this.pcmBuffer.write(pcm);
                 }catch(e){
                     console.error(e)

@@ -3,7 +3,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const TranscriptionQueue = require('./transcription/transcriptionQueue.js');
 const WAVWriter = require('./audio/WAVWriter.js');
-const { addSegment, getRoomTranscript, getRoomTranscriptText, clearRoom, getSegmentCount, getAllRooms, saveRoomTranscriptToFile } = require('./transcriptStore.js');
+const { addSegment, getRoomTranscript, getRoomTranscriptText, clearRoom, getSegmentCount, getAllRooms, saveRoomTranscriptToFile, setTSLogs } = require('./transcriptStore.js');
 
 class LiveAudioService {
   constructor(options = {}) {
@@ -11,7 +11,9 @@ class LiveAudioService {
     this.sampleRate = options.sampleRate || 16000;
     this.channels = options.channels || 1;
     this.bitDepth = options.bitDepth || 16;
-    
+    this.WAVWriter_Logs=options.WAVWriter_Logs
+    this.LiveAudioService_Logs=options.LiveAudioService_Logs
+    setTSLogs(options.TranscriptStore_Logs)
     // Per-room, per-user audio buffers
     // Structure: { roomId: { userId: { 
     //   chunks: [], 
@@ -35,10 +37,12 @@ class LiveAudioService {
     // Transcription queue
     this.transcriptionQueue = new TranscriptionQueue(
       options.maxConcurrent || 2,
-      options.modelPath || 'whisper/models/ggml-base.en.bin'
+      options.modelPath || 'whisper/models/ggml-base.en.bin',
+      options.WhisperRunner_Logs,
+      options.TranscriptionQueue_Logs
     );
     
-    console.log('[LiveAudioService] initialized:', {
+    if(this.LiveAudioService_Logs===true)console.log('[LiveAudioService] initialized:', {
       bufferDuration: this.bufferDuration,
       sampleRate: this.sampleRate,
       channels: this.channels,
@@ -52,7 +56,7 @@ class LiveAudioService {
   _ensureTempDir() {
     if (!fs.existsSync(this.tempDir)) {
       fs.mkdirSync(this.tempDir, { recursive: true });
-      console.log(`[LiveAudioService] Created temp directory: ${this.tempDir}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Created temp directory: ${this.tempDir}`);
     }
   }
 
@@ -124,7 +128,7 @@ class LiveAudioService {
       const session = this._getOrCreateSession(roomId, userId);
       // Check if session is active
       if (!session.isActive) {
-        console.log(`[LiveAudioService] Skipping audio chunk – session inactive for user ${userId}`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Skipping audio chunk – session inactive for user ${userId}`);
         return;
       }
 
@@ -145,10 +149,10 @@ class LiveAudioService {
       // Check if buffer is full enough to process
       if (session.totalDuration >= this.bufferDuration && !session.processingTimer) {
         if (this._canStartTranscription(session)) {
-          console.log(`[LiveAudioService] Buffer full for user ${userId}, processing...`);
+          if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Buffer full for user ${userId}, processing...`);
           await this._processBufferedAudio(roomId, userId, emitCallback);
         } else {
-          console.log(`[LiveAudioService] Buffer full but transcription in progress for user ${userId}, skipping...`);
+          if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Buffer full but transcription in progress for user ${userId}, skipping...`);
           // Reset buffer to prevent accumulation
           session.chunks = [];
           session.totalDuration = 0;
@@ -158,10 +162,10 @@ class LiveAudioService {
         session.processingTimer = setTimeout(() => {
           const currentSession = this._getActiveSession(roomId, userId);
           if (currentSession && this._canStartTranscription(currentSession)) {
-            console.log(`[LiveAudioService] Processing timeout for user ${userId}`);
+            if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Processing timeout for user ${userId}`);
             this._processBufferedAudio(roomId, userId, emitCallback);
           } else {
-            console.log(`[LiveAudioService] Processing timeout skipped – session inactive or transcription in progress`);
+            if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Processing timeout skipped – session inactive or transcription in progress`);
           }
         }, this.bufferDuration);
       }
@@ -212,19 +216,19 @@ class LiveAudioService {
     
     // Guard: Check session exists and is active
     if (!session) {
-      console.log(`[LiveAudioService] Skipping processing – no active session for user ${userId}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Skipping processing – no active session for user ${userId}`);
       return;
     }
     
     // Guard: Check not already processing
     if (!this._canStartTranscription(session)) {
-      console.log(`[LiveAudioService] Skipping processing – transcription already in progress for user ${userId}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Skipping processing – transcription already in progress for user ${userId}`);
       return;
     }
     
     // Guard: Check has chunks
     if (session.chunks.length === 0) {
-      console.log(`[LiveAudioService] Skipping processing – no audio chunks for user ${userId}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Skipping processing – no audio chunks for user ${userId}`);
       return;
     }
 
@@ -241,7 +245,7 @@ class LiveAudioService {
       // Guard: Check minimum duration (at least 0.3 seconds)
       const durationSeconds = totalLength / this.sampleRate;
       if (durationSeconds < 0.3) {
-        console.log(`[LiveAudioService] Skipping processing – audio too short (${durationSeconds.toFixed(2)}s < 0.3s)`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Skipping processing – audio too short (${durationSeconds.toFixed(2)}s < 0.3s)`);
         session.chunks = [];
         session.totalDuration = 0;
         return;
@@ -268,17 +272,17 @@ class LiveAudioService {
       const tempFileName = `live_${roomId}_${userId}_${uuidv4()}.wav`;
       const tempFilePath = path.join(this.tempDir, tempFileName);
       
-      console.log(`[LiveAudioService] Creating WAV file: ${tempFilePath}`);
-      console.log(`[LiveAudioService] Audio duration: ${durationSeconds.toFixed(2)}s`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Creating WAV file: ${tempFilePath}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Audio duration: ${durationSeconds.toFixed(2)}s`);
       
       // Write WAV file
-      const wavWriter = new WAVWriter(tempFilePath, this.sampleRate, this.channels);
+      const wavWriter = new WAVWriter(tempFilePath, this.sampleRate, this.channels, this.WAVWriter_Logs);
       wavWriter.appendPCM(combinedAudio);
       
       // Finalize WAV file
-      console.log(`[LiveAudioService] Finalizing WAV file...`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Finalizing WAV file...`);
       const finalizedPath = await wavWriter.finalize();
-      console.log(`[LiveAudioService] WAV file finalized: ${finalizedPath}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] WAV file finalized: ${finalizedPath}`);
       
       // Verify file exists
       if (!fs.existsSync(finalizedPath)) {
@@ -288,13 +292,13 @@ class LiveAudioService {
       // Check if session still active before adding to queue
       const currentSession = this._getActiveSession(roomId, userId);
       if (!currentSession) {
-        console.log(`[LiveAudioService] Session ended before transcription, cleaning up file`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Session ended before transcription, cleaning up file`);
         fs.unlinkSync(finalizedPath);
         return;
       }
       
       // Add to transcription queue
-      console.log(`[LiveAudioService] Adding to transcription queue: ${finalizedPath}`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Adding to transcription queue: ${finalizedPath}`);
       const jobId = uuidv4();
       
       // Start transcription and track the process
@@ -306,7 +310,7 @@ class LiveAudioService {
           // Callback to track the spawned process
           if (currentSession) {
             currentSession.activeWhisperProcess = process;
-            console.log(`[LiveAudioService] Tracking Whisper process ${process.pid} for user ${userId}`);
+            if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Tracking Whisper process ${process.pid} for user ${userId}`);
           }
         }
       );
@@ -314,7 +318,7 @@ class LiveAudioService {
       // Handle transcription result
       transcriptionPromise
         .then(result => {
-          console.log(`[LiveAudioService] Transcription completed for user ${userId}`);
+          if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Transcription completed for user ${userId}`);
           
           // Get fresh session reference
           const resultSession = this._getActiveSession(roomId, userId);
@@ -392,7 +396,7 @@ class LiveAudioService {
    */
   handleUserLeft(roomId, userId) {
     try {
-      console.log(`[LiveAudioService] User ${userId} leaving room ${roomId}, cleaning up...`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] User ${userId} leaving room ${roomId}, cleaning up...`);
       
       const roomBuffers = this.audioBuffers.get(roomId);
       if (!roomBuffers) return;
@@ -411,7 +415,7 @@ class LiveAudioService {
         // Kill active Whisper process if exists
         if (session.activeWhisperProcess) {
           try {
-            console.log(`[LiveAudioService] Force killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
+            if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Force killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
             session.activeWhisperProcess.kill('SIGKILL');
             session.activeWhisperProcess = null;
           } catch (killError) {
@@ -426,13 +430,13 @@ class LiveAudioService {
         
         // Remove user buffer
         roomBuffers.delete(userId);
-        console.log(`[LiveAudioService] Cleaned up session for user ${userId} in room ${roomId}`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Cleaned up session for user ${userId} in room ${roomId}`);
       }
       
       // If room is empty, remove it
       if (roomBuffers.size === 0) {
         this.audioBuffers.delete(roomId);
-        console.log(`[LiveAudioService] Removed empty room buffer: ${roomId}`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Removed empty room buffer: ${roomId}`);
       }
     } catch (error) {
       console.error('[LiveAudioService] Error handling user left:', error.message);
@@ -444,7 +448,7 @@ class LiveAudioService {
    */
   handleRoomEnded(roomId) {
     try {
-      console.log(`[LiveAudioService] Room ${roomId} ending, cleaning up everything...`);
+      if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Room ${roomId} ending, cleaning up everything...`);
       
       const roomBuffers = this.audioBuffers.get(roomId);
 
@@ -461,7 +465,7 @@ class LiveAudioService {
           
           if (session.activeWhisperProcess) {
             try {
-              console.log(`[LiveAudioService] Force killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
+              if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Force killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
               session.activeWhisperProcess.kill('SIGKILL');
             } catch (killError) {
               console.error(`[LiveAudioService] Error killing Whisper process: ${killError.message}`);
@@ -470,7 +474,7 @@ class LiveAudioService {
         });
         
         this.audioBuffers.delete(roomId);
-        console.log(`[LiveAudioService] Cleaned up room ${roomId} buffers`);
+        if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Cleaned up room ${roomId} buffers`);
       }
       
       // Save transcript to JSON file before clearing
@@ -546,7 +550,7 @@ class LiveAudioService {
           }
           session.isActive = false;
           roomBuffers.delete(userId);
-          console.log(`[LiveAudioService] Cleaned up stale buffer for user ${userId} in room ${roomId}`);
+          if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Cleaned up stale buffer for user ${userId} in room ${roomId}`);
         }
       });
       
@@ -560,7 +564,7 @@ class LiveAudioService {
    * Graceful shutdown
    */
   async shutdown() {
-    console.log('[LiveAudioService] Shutting down...');
+    if(this.LiveAudioService_Logs===true)console.log('[LiveAudioService] Shutting down...');
     
     // Clear cleanup interval
     if (this.cleanupInterval) {
@@ -578,7 +582,7 @@ class LiveAudioService {
         
         if (session.activeWhisperProcess) {
           try {
-            console.log(`[LiveAudioService] Killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
+            if(this.LiveAudioService_Logs===true)console.log(`[LiveAudioService] Killing Whisper process ${session.activeWhisperProcess.pid} for user ${userId}`);
             session.activeWhisperProcess.kill('SIGKILL');
           } catch (killError) {
             console.error(`[LiveAudioService] Error killing Whisper process: ${killError.message}`);
@@ -590,7 +594,7 @@ class LiveAudioService {
     // Clear all buffers
     this.audioBuffers.clear();
     
-    console.log('[LiveAudioService] Shutdown complete');
+    if(this.LiveAudioService_Logs===true)console.log('[LiveAudioService] Shutdown complete');
   }
 }
 
