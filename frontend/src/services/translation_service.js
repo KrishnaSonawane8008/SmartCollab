@@ -2,13 +2,20 @@ import { FetchRequest } from "../api/client"
 
 const BASE_URL=import.meta.env.VITE_TRANSLATION_API_BASE
 
-const LatinTexts=['en', 'fr', 'nl', 'sat-Latn']
 
-export async function translate(text_string, target) {
+export async function translate(message, target) {
 
-    if(isLanguageDominant(text_string, target)){
-        return {translated: text_string}
+    if(isLanguageDominant(message.text, target)){
+        return {translated: message.text}
     }
+
+    // class Message(BaseModel):
+    // text:str
+    // source_lang:str
+
+    // class TranslationRequest(BaseModel):
+    // message: Message 
+    // target: str
 
     return await FetchRequest(
             BASE_URL, `/translate`,
@@ -18,7 +25,7 @@ export async function translate(text_string, target) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ text:text_string, target:`${target}` })
+                body: JSON.stringify({ message:message, target:`${target}` })
             }
         )
 }
@@ -27,14 +34,14 @@ export async function translate_array(text_array, target) {
 
 
     return await FetchRequest(
-            BASE_URL, `/translate`,
+            BASE_URL, `/batchtranslate`,
             {
                 method: "POST",
                 credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ text:text_array, target:`${target}` })
+                body: JSON.stringify({ messages:text_array, target:`${target}` })
             }
         )
 }
@@ -55,11 +62,18 @@ export async function MessageArray_translate(messages_Array, target) {
 
     // const translated_arr=translated_str.translated.split(" <<>> ")
     
+    // class Message(BaseModel):
+    // text:str
+    // source_lang:str
 
-    const msg_array=messages_Array.map(obj=>obj.message)
+    // class TranslationRequest(BaseModel):
+    // message: Message 
+    // target: str
+
+    const msg_array=messages_Array.map(obj=>({text: obj.message, source_lang: obj.message_language}))
+    
     const translation_response=await translate_array(msg_array, target)
     const translated_array=translation_response.translated
-    // console.log(translated_array)
 
     const TranslatedArr=messages_Array.map((obj, indx)=>{
         obj.message=translated_array[indx]
@@ -72,20 +86,22 @@ export async function MessageArray_translate(messages_Array, target) {
 }
 
 
-function isLanguageDominant(text, targetCode) {
+export function isLanguageDominant(text, targetCode) {
   if (!text || typeof text !== 'string') return false;
 
   // 1. Map your language codes to their specific Unicode Script Regex
   const scriptMap = {
-    'ja': /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/gu,
     'ur': /\p{Script=Arabic}/gu,
+    'sd': /\p{Script=Arabic}/gu,
     'mni-Mtei': /[\uABC0-\uABFF\uAAE0-\uAAFF]/gu,
     'ta': /\p{Script=Tamil}/gu,
     'te': /\p{Script=Telugu}/gu,
+    'ka': /[\u0600-\u06FF\u0750-\u077F]/gu,
     'kn': /\p{Script=Kannada}/gu,
     'ml': /\p{Script=Malayalam}/gu,
     'gu': /\p{Script=Gujarati}/gu,
     'or': /\p{Script=Oriya}/gu,
+    'pu': /[\u0A00-\u0A7F]/gu,
     
     // Bengali and Assamese share the same script block
     'bn': /\p{Script=Bengali}/gu,
@@ -99,14 +115,10 @@ function isLanguageDominant(text, targetCode) {
     'doi': /\p{Script=Devanagari}/gu,
     'mai': /\p{Script=Devanagari}/gu,
     'ne': /\p{Script=Devanagari}/gu,
-    'sd': /\p{Script=Devanagari}/gu,
+    'bd': /\p{Script=Devanagari}/gu,
     
     // All 5 of these languages share the Latin script block
     'en': /\p{Script=Latin}/gu,
-    'es': /\p{Script=Latin}/gu,
-    'fr': /\p{Script=Latin}/gu,
-    'nl': /\p{Script=Latin}/gu,
-    'sat-Latn': /\p{Script=Latin}/gu
   };
 
   const targetRegex = scriptMap[targetCode];
@@ -132,5 +144,64 @@ function isLanguageDominant(text, targetCode) {
   // Rule 1: Must be strictly greater than the remaining linguistic characters
   return targetCount > remainingCount;
 }
+
+export function getDominantLanguage(text) {
+  if (!text || typeof text !== 'string') return 'en';
+
+  // 1. Map language codes to their specific Unicode Script Regex
+  // Fixed broken syntax for 'ka' and 'pu' to use standard character classes
+  const scriptMap = {
+    'ur': /\p{Script=Arabic}/gu,
+    'sd': /\p{Script=Arabic}/gu,
+    'mni-Mtei': /[\uABC0-\uABFF\uAAE0-\uAAFF]/gu,
+    'ta': /\p{Script=Tamil}/gu,
+    'te': /\p{Script=Telugu}/gu,
+    'ka': /[\u0600-\u06FF\u0750-\u077F]/gu, // Kashmiri (Arabic block script)
+    'kn': /\p{Script=Kannada}/gu,
+    'ml': /\p{Script=Malayalam}/gu,
+    'gu': /\p{Script=Gujarati}/gu,
+    'or': /\p{Script=Oriya}/gu,
+    'pu': /[\u0A00-\u0A7F]/gu,               // Punjabi (Gurmukhi block script)
+    'bn': /\p{Script=Bengali}/gu,
+    'as': /\p{Script=Bengali}/gu,
+    'hi': /\p{Script=Devanagari}/gu,
+    'mr': /\p{Script=Devanagari}/gu,
+    'sa': /\p{Script=Devanagari}/gu,
+    'gom': /\p{Script=Devanagari}/gu,
+    'doi': /\p{Script=Devanagari}/gu,
+    'mai': /\p{Script=Devanagari}/gu,
+    'ne': /\p{Script=Devanagari}/gu,
+    'bd': /\p{Script=Devanagari}/gu,
+    'en': /\p{Script=Latin}/gu,
+  };
+
+  // Track the highest count and the winning code
+  let maxCount = 0;
+  let dominantCode = 'en'; 
+
+  // 2. Iterate through each language configuration to tally character counts
+  for (const [langCode, regex] of Object.entries(scriptMap)) {
+    // Reset regex state execution for safety
+    regex.lastIndex = 0; 
+    
+    const matches = text.match(regex);
+    const count = matches ? matches.length : 0;
+
+    // Check if this script configuration beats our current leader
+    if (count > maxCount) {
+      maxCount = count;
+      dominantCode = langCode;
+    }
+  }
+
+  // 3. Fallback resolution logic
+  // If there's an absolute zero match layout across all scripts, default back to English.
+  if (maxCount === 0) {
+    return 'en';
+  }
+
+  return dominantCode;
+}
+
 
 

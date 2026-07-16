@@ -150,7 +150,8 @@ def insert_into_messages(session: Session):
                             community_id=channel.community_id,
                             channel_id=channel.channel_id,
                             message=f'{noun} {verb} {adjective}',
-                            sent_at=datetime.now(timezone.utc)
+                            sent_at=datetime.now(timezone.utc),
+                            message_language="en"
                         )
 
                         query=insert(database_models.Messages).values(**message.model_dump())

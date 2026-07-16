@@ -65,6 +65,7 @@ class MessageCreate(BaseModel):
     channel_id:int
     message:str
     sent_at:datetime
+    message_language:str
 
 class MessageRead(BaseModel):
     message_id:int
@@ -73,6 +74,7 @@ class MessageRead(BaseModel):
     channel_id:int
     message:str
     sent_at:datetime
+    message_language:str
 
 
 

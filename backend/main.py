@@ -70,7 +70,8 @@ if __name__ == "__main__":
 
 
 origins = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:8001"
 ]
 
 app.add_middleware(

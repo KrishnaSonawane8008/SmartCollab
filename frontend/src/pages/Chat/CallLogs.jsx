@@ -1,12 +1,17 @@
-import { MoveLeft, ChevronDown, ChevronLeft, AlertCircle, Trash2Icon, Loader2} from "lucide-react"
+import { MoveLeft, ChevronDown, ChevronLeft, AlertCircle, Trash2Icon, Loader2, Languages, Undo2} from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { get_call_logs, get_call_summary } from "../../services/summary_service"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext } from "react"
+import { Global_Context } from "../../contexts/Global-context-provider"
 import ScrollBar from "../common components/ScrollBar"
 import { delete_call_log } from "../../services/dev_services"
+import { getDominantLanguage } from "../../services/translation_service"
+import { translate } from "../../services/translation_service"
+
 
 const DEV_KEY = import.meta.env.VITE_DEV_MODE_KEY
+const SUMMARY_STREAM_URL=import.meta.env.VITE_SUMMARY_STREAM_URL
 
 const Header=()=>{
 
@@ -63,6 +68,126 @@ const LogTab=({value})=>{
     const [open, setOpen]=useState(false)
     const [deletion_loading, setDeletionLoading]=useState(false)
     const queryClient = useQueryClient();
+    const {UserData}=useContext(Global_Context)
+
+    const [summary, setSummary] = useState("");
+    const [isError, setError]=useState(false)
+    const [generating, setGenerating] = useState(false);
+    const [loading, setLoading]=useState(false)
+    const [summary_finished, setSummaryFinished]=useState(false)
+    const [eventSource, setEventSource] = useState(null);
+
+    const [showTranslated, setShowTranslated]=useState(false)
+    const [translated_summary, setTranslatedSummary]=useState(null)
+    const [translation_loading, setTranslationLoading]=useState(false)
+    const [target_lang, setTargetLang]=useState(UserData?.preferred_language)
+
+    // const { data, isError:translation_error, isFetching:translation_loading, refetch } = useQuery({
+    //     queryKey: ["translated_summary", `${value.community_id}${value.channel_id}_${value.call_id}`, UserData?.preferred_language],
+    //     queryFn: async () => {
+    //         return translate({text:summary, source_lang:getDominantLanguage(summary)}, UserData?.preferred_language)
+    //     },
+    //     enabled: false,
+    //     staleTime: Infinity
+    // })
+
+    // const translated_summary=data?.translated ? data.translated : summary
+    // console.log(translated_summary)
+    const translateSummary= async ()=>{
+        if(typeof summary !== 'string' || !(summary.length>0)){
+            return
+        }
+        try{
+            setTranslationLoading(true)
+            const translated=await translate({text:summary, source_lang:getDominantLanguage(summary)}, UserData?.preferred_language)
+            setTranslatedSummary(translated.translated)
+            setTranslationLoading(false)
+        }catch(e){
+            console.error(e)
+            setShowTranslated(false)
+            setTranslationLoading(false)
+            setTranslatedSummary(null)
+        }finally{
+            setTranslationLoading(false)
+            setTargetLang(UserData?.preferred_language)
+        }
+        
+    } 
+
+
+    const stream_summary=async () => {
+
+        try{
+            setEventSource(null)
+            setSummary("");
+            setError(false)
+            setGenerating(true);
+            setLoading(true)
+            setSummaryFinished(false)
+
+            const response = await get_call_summary(
+                `${value.community_id}${value.channel_id}`,
+                value.call_id
+            );
+
+            const pre_generated=response.generated_summary
+            if(pre_generated){
+                setEventSource(null)
+                setSummary(pre_generated);
+                setError(false)
+                setGenerating(false);
+                setLoading(false)
+                setSummaryFinished(true)
+                return
+            }
+
+            const streamId = response.stream_id;
+            const es = new EventSource(
+                `${SUMMARY_STREAM_URL}${value.community_id}${value.channel_id}_${value.call_id}/${streamId}`
+            );
+
+            setEventSource(es);
+
+            es.addEventListener("token", (event) => {
+                setLoading(false)
+                setSummary(prev => prev + event.data);
+            });
+
+            es.addEventListener("generated", (event)=>{
+                if(typeof event.data === 'string' && event.data.length>0){
+                    setLoading(false)
+                }
+                setSummary(event.data)
+            })
+
+            es.addEventListener("done", () => {
+                setLoading(false)
+                setGenerating(false);
+                setEventSource(null)
+                setSummaryFinished(true)
+                es.close();
+
+            });
+
+            es.addEventListener("error", () => {
+                setLoading(false)
+                setGenerating(false);
+                setEventSource(null)
+                setError(true)
+                es.close();
+
+            });
+        }catch(e){
+            console.error(e)
+            setLoading(false)
+            setGenerating(false);
+            setEventSource(null)
+            setError(true)
+        }
+
+    }
+
+    
     // call_id : 134
     // call_participants : ['User2']
     // call_starter_id : 2
@@ -73,12 +198,12 @@ const LogTab=({value})=>{
     // ended_at : "2026-05-08T23:01:29.173000+05:30"
     // started_at : "2026-05-08T23:01:24.518000+05:30"
 
-    const {data, isLoading, isFetching, isError, error, refetch}=useQuery({
-        queryKey: ["call_logs", value.community_id, value.channel_id, value.call_id],
-        queryFn: ()=>{return get_call_summary(`${value.community_id}${value.channel_id}`, value.call_id)},
-        enabled: false,
-        staleTime: Infinity
-    })
+    // const {data, isLoading, isFetching, isError, error, refetch}=useQuery({
+    //     queryKey: ["call_logs", value.community_id, value.channel_id, value.call_id],
+    //     queryFn: ()=>{return get_call_summary(`${value.community_id}${value.channel_id}`, value.call_id)},
+    //     enabled: false,
+    //     staleTime: Infinity
+    // })
 
 
     const started_datetime=get_date_time(new Date(value.started_at))
@@ -97,15 +222,12 @@ const LogTab=({value})=>{
                     <span className=" text-[0.8rem]">{lasted==="now"?"finished just now":`call lasted for ${lasted}`}</span>
                 </div>
                 <div className="ml-auto">
-                    {/* <div className="w-[44px] h-[44px] my-1 flex-shrink-0 rounded-[16px] flex items-center justify-center bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] transition-all duration-250 cursor-pointer group" title="Add Community">
-                        <Plus className="w-[20px] h-[20px] flex-shrink-0 text-[#DDE6E0] group-hover:text-white transition-colors" strokeWidth={2} />
-                    </div> */}
-                    <button 
-                        className="flex-shrink-0 rounded-[10px] flex items-center justify-center bg-[#2f5d50] backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] hover:scale-[1.08] text-[#f4e6c8] transition-all duration-250 cursor-pointer group px-2.5 py-1.5"
 
-                        onClick={()=>{
-                            refetch()
-                        }}
+                    <button 
+                        className={`flex-shrink-0 rounded-[10px] flex items-center justify-center ${generating?"bg-[#5e8b7e] cursor-not-allowed":"bg-[#2f5d50] hover:scale-[1.08] cursor-pointer"} backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] text-[#f4e6c8] transition-all duration-250 group px-2.5 py-1.5`}
+                        disabled={generating}
+                        onClick={()=>{stream_summary()}}
+
                     >
                         Generate Summary ✨
                     </button>
@@ -174,46 +296,89 @@ const LogTab=({value})=>{
                         </div>
                     </div>
                     
+                    
 
                     {
-                        isFetching?(
-                            <div
-                                className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-col p-2 mt-2 text-[0.8rem]"
-                            >
-                                <div className="flex-1 flex justify-center items-center">
-                                    <div className="w-4 h-4 mx-2 border-2 border-[#e3f2ee] border-t-[#347361] rounded-full animate-spin" />
-                                    Generating...
+                        loading===true ? (
+                            <div className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-col items-center justify-center p-4 mt-2">
+                                <div className="flex items-center gap-1">
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:0ms]" />
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:150ms]" />
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:300ms]" />
                                 </div>
                             </div>
-                        ):data?.summary && (
+                        ):(
+                        isError===true?(
                             <div
-                                className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-col p-2 mt-2 text-[0.8rem]"
+                                className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-row items-center p-2 mt-2 text-[0.8rem] text-[#ff5555]"
                             >   
-                                <span className="flex w-full justidy-start text-[0.9rem] font-medium">Summary</span>
-                                <div className="mt-2">
-                                    {data.summary}
-                                </div>
+                                <AlertCircle size={15} className="mx-1"/>
+                                {
+                                    (function(){
+                                        // console.log(error.status)
+                                        return(
+                                            <span className="flex w-full justidy-start text-[0.8rem] font-medium">Error: Summary Cant be generated</span>
+                                        )
+                                    })()
+                                }
                             </div>
+                        ):(
+                            summary &&(
+                                <div
+                                    className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-col p-2 mt-2 text-[0.8rem]"
+                                >   
+                                    <div className="flex w-full">
+                                        <span className="text-[0.9rem] my-auto font-medium">Summary</span>
+                                        { (summary_finished===true && !generating) &&
+                                            <button 
+                                            // ${generating?"bg-[#5e8b7e] cursor-not-allowed":"bg-[#2f5d50] hover:scale-[1.08] cursor-pointer"}
+                                                className={`flex-shrink-0 rounded-[7px] flex items-center justify-center hover:bg-[#2f5d50] hover:text-[#f4e6c8] cursor-pointer backdrop-blur-[8px] text-[0.75rem] text-[#2f5d50] transition-all duration-250 group mx-[1rem] p-1 ml-auto`}
+                                                title={!showTranslated?"Translate Summary":(target_lang===UserData?.preferred_language?"See Original":"Translate Summary")}
+
+                                                onClick={async ()=>{
+                                                    if(showTranslated===true && target_lang===UserData?.preferred_language){
+                                                        setShowTranslated(false)
+                                                        return
+                                                    }
+                                                    if(translated_summary?.length>0 && target_lang===UserData?.preferred_language){
+                                                        setShowTranslated(true)
+                                                        return
+                                                    }
+                                                    await translateSummary()
+                                                    setShowTranslated(true)
+                                                }}
+                                            >
+                                                {translation_loading?(
+                                                    <Loader2 size={20} className=" animate-spin"/>
+                                                ):(
+                                                    (!showTranslated)?(
+                                                        <Languages size={20}/>
+                                                    ):(
+                                                        (target_lang===UserData?.preferred_language)?(
+                                                            <Undo2 size={20}/>
+                                                        ):(
+                                                            <Languages size={20}/>
+                                                        )
+                                                    )
+                                                )
+                                                }
+                                            </button>
+                                        }
+                                    </div>
+                                    <div className="mt-2">
+                                        {(showTranslated && translated_summary)?translated_summary: summary}
+                                        {generating && (
+                                            // ▌
+                                            <span className="blinking-cursor text-[0.7rem]">▌</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        )
                         )
                     }
 
-                    {
-                        isError && 
-                        <div
-                            className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-row items-center p-2 mt-2 text-[0.8rem] text-[#ff5555]"
-                        >   
-                            <AlertCircle size={15} className="mx-1"/>
-                            {
-                                (function(){
-                                    // console.log(error.status)
-                                    return(
-                                        <span className="flex w-full justidy-start text-[0.8rem] font-medium">Error: Summary Cant be generated</span>
-                                    )
-                                })()
-                            }
-                        </div>
-                    }
-                        
+
                 </div>
             }
         </div>

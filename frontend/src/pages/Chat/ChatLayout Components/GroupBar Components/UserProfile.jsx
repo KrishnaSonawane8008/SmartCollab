@@ -8,14 +8,18 @@ import { change_preferred_language } from '../../../../services/user_services'
 import { useQueryClient } from '@tanstack/react-query'
 import chalk from 'chalk'
 
+
+
 const LANGUAGES = [
   { code: 'en', label: 'English' },
   {code: 'as', label: "Assamese"},
   {code: 'bn', label: "Bengali"},
+  {code: 'bd', label: "Bodo"},
   {code: 'doi', label: "Dogri"},
   {code: 'gu', label: "Gujarati"},
   {code: 'hi', label: "Hindi"},
   {code: 'kn', label: "Kannada"},
+  {code: 'ka', label: "Kashmiri"},
   {code: 'gom', label: "Konkani"},
   {code: 'mai', label: "Maithili"},
   {code: 'ml', label: "Malayalam"},
@@ -23,16 +27,13 @@ const LANGUAGES = [
   {code: 'mr', label: "Marathi"},
   {code: 'ne', label: "Nepali"},
   {code: 'or', label: "Odia (Oriya)"},
+  {code: 'pu', label: "Punjabi (Gurmukhi)"},
   {code: 'sa', label: "Sanskrit"},
-  {code: 'sat-Latn', label: "Santali (Latin)"},
+  {code: 'sat-Olck', label: "Santali (Ol Chiki)"},
   {code: 'sd', label: "Sindhi"},
   {code: 'ta', label: "Tamil"},
   {code: 'te', label: "Telugu"},
   {code: 'ur', label: "Urdu"},
-  { code: 'es', label: 'Spanish' },
-  { code: 'fr', label: 'French' },
-  { code: 'nl', label: 'Dutch' },
-  { code: 'ja', label: 'Japanese' },
 ]
 
 
