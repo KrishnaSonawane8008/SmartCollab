@@ -4,6 +4,7 @@ __pycache__
 \.env
 secrets
 info.txt
+patchInstructions.md
 
 #tranbscriber
 transcriber/whisper/models/*

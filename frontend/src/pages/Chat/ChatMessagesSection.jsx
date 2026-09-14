@@ -2,17 +2,20 @@ import ChatHeader from "./MessageSection Components/ChatHeader"
 import TextBox from "./MessageSection Components/TextBox"
 import MessageBar from "./MessageSection Components/MessageBar"
 import { useParams } from "react-router-dom"
-import { useContext, useEffect, useRef } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { ChatLayout_Context } from "../../contexts/ChatLayout-context-provider"
 import { Global_Context } from "../../contexts/Global-context-provider"
 import { get_channel_messages } from "../../services/channel_services"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import ScrollBar from "../common components/ScrollBar"
 import { wsClient } from "../../api/websocket"
+import { isLanguageDominant, getDominantLanguage } from "../../services/translation_service"
 
 const ChatMessagesSection = () => {
   const { communityId, channelId } = useParams()
   const scrollbarRef = useRef(null)
+
+  const [keyboard_open, setKeyboardOpen]=useState(false)
 
   const { setCommunityChannelMap, user_id } = useContext(ChatLayout_Context)
   const { UserData, LanguageChanged } = useContext(Global_Context)
@@ -31,7 +34,7 @@ const ChatMessagesSection = () => {
     refetchOnReconnect: false,   
   })
 
-  const update_message_list = ({ type, sender_id, sender_name, community_id, channel_id, message, sent_at }) => {
+  const update_message_list = ({ type, sender_id, sender_name, community_id, channel_id, message, sent_at, message_language }) => {
     if (!type || !sender_id || !community_id || !channel_id || !message) return
     const state = queryClient.getQueryState(["messages", String(community_id), String(channel_id), UserData?.preferred_language])
     if (!state) return
@@ -41,7 +44,7 @@ const ChatMessagesSection = () => {
         const prev = old?.Messages ?? []
         return {
           ...old,
-          Messages: [...prev, { type, sender_id: sender_id == user_id ? "user" : sender_id, sender_name, community_id, channel_id, sent_at, message, is_new_message: true }],
+          Messages: [...prev, { type, sender_id: sender_id == user_id ? "user" : sender_id, sender_name, community_id, channel_id, sent_at, message, message_language, is_new_message: true }],
         }
       }
     )
@@ -75,14 +78,32 @@ const ChatMessagesSection = () => {
     }
   }, [data, isSuccess, isFetching])
 
+  useEffect(()=>{
+    scrollbarRef.current?.scrollToBottom()
+  },[keyboard_open])
+
   const sendMessage = (value) => {
     if (!value || !wsClient) return
-    wsClient.send({
-      'type': 'message',
-      'communityId': communityId,
-      'channelId': channelId,
-      "message": value
-    })
+
+    if(isLanguageDominant(value, UserData?.preferred_language)){
+
+      wsClient.send({
+        'type': 'message',
+        'communityId': communityId,
+        'channelId': channelId,
+        "message": value,
+        "message_language":UserData?.preferred_language
+      })
+    }else{
+      const lang=getDominantLanguage(value)
+      wsClient.send({
+        'type': 'message',
+        'communityId': communityId,
+        'channelId': channelId,
+        "message": value,
+        "message_language":lang
+      })
+    }
   }
 
   if (isError) {
@@ -106,13 +127,16 @@ const ChatMessagesSection = () => {
           </div>
         ) : null}
 
-        <ScrollBar ref={scrollbarRef}>
-          <div className="w-full flex flex-col items-center justify-center">
+        <ScrollBar ref={scrollbarRef} >
+          <div className="w-full flex flex-col items-center justify-center"
+          >
             {/* FIX: Turned into flex-col-reverse. HTML tree renders from bottom up natively */}
-            <div className="flex flex-col-reverse px-8 w-full bg-transparent">
+            <div className="flex flex-col-reverse px-8 w-full bg-transparent"
+              
+            >
               
               {/* Bottom Spacer is now placed at the TOP of the reverse container */}
-              <div className="h-[92px] flex-shrink-0"></div>
+              <div className={`${keyboard_open?"h-[366px]":"h-[92px]"} flex-shrink-0 `}></div>
 
               {data?.Messages && Array.isArray(data.Messages) &&
                 [...data.Messages].reverse().map((msg, i, arr) => {
@@ -158,6 +182,7 @@ const ChatMessagesSection = () => {
                         sender_id={msg.sender_id}
                         sender_name={msg.sender_name}
                         sent_at={msg.sent_at}
+                        message_language={msg.message_language}
                         is_new_message={msg.is_new_message}
                       />
                     </div>
@@ -173,10 +198,11 @@ const ChatMessagesSection = () => {
           <div className="absolute inset-0 -z-10 backdrop-blur-md [mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)]" />
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,transparent_0%,rgba(248,248,248,0.6)_30%,rgba(248,248,248,1)_100%)]" />
           <div className="mt-5 pb-7">
-            <MessageBar onEnter_callback={sendMessage} />
+            <MessageBar onEnter_callback={sendMessage} setKeyboardOpen={setKeyboardOpen}/>
           </div>
         </div>
       </div>
+
     </div>
   )
 }

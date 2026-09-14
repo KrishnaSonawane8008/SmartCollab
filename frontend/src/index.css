@@ -373,3 +373,12 @@ body {
   border-radius: 4px;
 }
 
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.blinking-cursor {
+    animation: blink 0.8s steps(1) infinite;
+}

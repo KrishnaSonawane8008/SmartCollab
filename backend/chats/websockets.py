@@ -153,7 +153,8 @@ def get_message_correct_format(data: dict, uid:str,user_name:str)->dict|None:
                         "community_id":commid_int,
                         "channel_id":chanlid_int,
                         "message":data["message"],
-                        "sent_at":datetime.now(timezone.utc).isoformat()
+                        "sent_at":datetime.now(timezone.utc).isoformat(),
+                        "message_language":data["message_language"]
                     }
     return message_correct_format
 

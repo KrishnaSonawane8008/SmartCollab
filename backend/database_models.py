@@ -100,6 +100,7 @@ class Messages(Base):
     channel_id=Column(Integer, nullable=False)
     message=Column(String)
     sent_at=Column(DateTime(timezone=True))
+    message_language=Column(String, nullable=False)
 
     __table_args__=(
         ForeignKeyConstraint(

@@ -1,11 +1,14 @@
 const fs = require('fs');
+const WhisperRunner=require('./whisperRunner')
 class TranscriptionQueue {
-  constructor(maxConcurrent = 2, modelPath = 'models/ggml-base.en.bin') {
+  constructor(maxConcurrent = 2, modelPath = 'models/ggml-base.en.bin', WR_logs=true, TQ_logs=true) {
     this.maxConcurrent = maxConcurrent;
     this.modelPath = modelPath;
     this.pendingJobs = [];
     this.runningJobs = 0;
-    this.whisperRunner = new (require('./whisperRunner'))(modelPath);
+    this.WR_logs=WR_logs
+    this.TQ_logs=TQ_logs
+    this.whisperRunner = new WhisperRunner(modelPath, WR_logs);
     this.isProcessing = false;
   }
 
@@ -38,7 +41,7 @@ class TranscriptionQueue {
       this.runningJobs++;
       
       try {
-        console.log(`[TranscriptionQueue] Starting transcription for user ${job.userId} in room ${job.roomId}`);
+        if(this.TQ_logs===true)console.log(`[TranscriptionQueue] Starting transcription for user ${job.userId} in room ${job.roomId}`);
         
         // Pass the onProcessSpawned callback to track the child process
         const result = await this.whisperRunner.transcribe(job.filePath, job.onProcessSpawned);
@@ -53,7 +56,7 @@ class TranscriptionQueue {
           ...result
         });
         
-        console.log(`[TranscriptionQueue] Completed transcription for user ${job.userId} in ${result.processingTime}ms`);
+        if(this.TQ_logs===true)console.log(`[TranscriptionQueue] Completed transcription for user ${job.userId} in ${result.processingTime}ms`);
       } catch (error) {
         console.error(`[TranscriptionQueue] Transcription failed for user ${job.userId}:`, error.message);
         
@@ -87,7 +90,7 @@ class TranscriptionQueue {
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log('[TranscriptionQueue] Cleaned up audio file: ' + filePath);
+        if(this.TQ_logs===true)console.log('[TranscriptionQueue] Cleaned up audio file: ' + filePath);
       }
     } catch (error) {
       console.error('[TranscriptionQueue] Error cleaning up audio file: ', error.message);
@@ -128,7 +131,7 @@ class TranscriptionQueue {
   updateModelPath(newModelPath) {
     if (this.whisperRunner.constructor.validateModelPath(newModelPath)) {
       this.modelPath = newModelPath;
-      this.whisperRunner = new (require('./whisperRunner'))(newModelPath);
+      this.whisperRunner = new WhisperRunner(newModelPath, this.WR_logs);
       return true;
     }
     return false;
