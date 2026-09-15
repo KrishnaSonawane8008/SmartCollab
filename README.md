@@ -1,6 +1,18 @@
 <img src="./readme/smart-collab.svg" alt="Alt Text" style="width: 100%; height: auto;">
 
-# SmartCollab: An AI-Powered Multilingual Platform for Real-Time Collaboration
+<!-- Row 1: Core Application Stack -->
+![Python](https://img.shields.io/badge/python-v3.12.4-3776AB?style=for-the-badge&logo=python&style=plastic)
+![FastAPI](https://img.shields.io/badge/fastapi-v0.127.0-009688?style=for-the-badge&logo=fastapi&style=plastic)
+![ollama](https://img.shields.io/badge/ollama-v0.21.0-000000?style=for-the-badge&logo=ollama&style=plastic)
+![PostgreSQL](https://img.shields.io/badge/postgresql-v18.3-4169E1?style=for-the-badge&logo=postgresql&logoColor=4169E1&style=plastic)
+![Redis](https://img.shields.io/badge/redis-v4.2.3-FF4438?style=for-the-badge&logo=redis&style=plastic)
+![React](https://img.shields.io/badge/react-v19.2.0-61DAFB?style=for-the-badge&logo=react&style=plastic)
+![Tailwind CSS](https://img.shields.io/badge/tailwindcss-v4.1.18-06B6D4?style=for-the-badge&logo=tailwindcss&style=plastic)
+![Node.js](https://img.shields.io/badge/node.js-v24.12.0-5FA04E?style=for-the-badge&logo=nodedotjs&style=plastic)
+![WebRTC Mediasoup](https://img.shields.io/badge/medisoup-v3.19.17-06B6D4?style=for-the-badge&logo=webrtc&style=plastic)
+![WebSockets](https://img.shields.io/badge/socket.io-v4.8.3-010101?style=for-the-badge&logo=socketdotio&style=plastic)
+
+---
 
 SmartCollab is a real-time collaboration ecosystem designed to eliminate linguistic, geographical, and organizational barriers in modern remote teamwork. By combining low-latency multi-party video conferencing, dynamic WebSockets messaging, automated C++ Whisper audio transcription, neural machine translation (NLLB-200), and streaming AI meeting summarization (Llama 3.1), SmartCollab transforms disparate digital interactions into a unified, intelligent, and highly accessible workplace.
 
