@@ -1,6 +1,4 @@
-<div style="background-color: #fcf9f8; width: 100%; display: flex; justify-content: center; align-items: center; padding: 24px 0;">
-  <img src="./readme/smart-collab.svg" alt="Smart Collab Logo" style="display: block; max-width: 100%; height: auto;" />
-</div>
+<img src="./readme/smart-collab.svg" alt="Alt Text" style="width: 100%; height: auto;">
 
 # SmartCollab: An AI-Powered Multilingual Platform for Real-Time Collaboration
 
