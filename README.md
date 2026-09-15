@@ -87,3 +87,5 @@ Apple
 
 ## PS
 if testing sfu, run the project only on chrome, the sfu doesnt work with firefox because it has a diferent certificate requirement.
+
+<img src="./readme/sytem arch full.svg" alt="Alt Text" style="width: 100%; height: auto;">
