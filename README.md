@@ -1,3 +1,7 @@
+<div style="background-color: #fcf9f8; width: 100%; display: flex; justify-content: center; align-items: center; padding: 24px 0;">
+  <img src="./readme/smart-collab.svg" alt="Smart Collab Logo" style="display: block; max-width: 100%; height: auto;" />
+</div>
+
 # SmartCollab: An AI-Powered Multilingual Platform for Real-Time Collaboration
 
 SmartCollab is a real-time collaboration ecosystem designed to eliminate linguistic, geographical, and organizational barriers in modern remote teamwork. By combining low-latency multi-party video conferencing, dynamic WebSockets messaging, automated C++ Whisper audio transcription, neural machine translation (NLLB-200), and streaming AI meeting summarization (Llama 3.1), SmartCollab transforms disparate digital interactions into a unified, intelligent, and highly accessible workplace.
@@ -200,7 +204,6 @@ DEV_MODE_KEY=dev_mode_key
 VITE_API_BASE_URL=/backend
 VITE_API_PROXY_URL=http://localhost:8000
 
-TRANSLATION_PORT=3000
 VITE_TRANSLATION_API_BASE=/translation
 VITE_TRANSLATION_API_PROXY_URL=http://localhost:8002
 
