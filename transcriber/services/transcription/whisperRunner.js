@@ -9,7 +9,7 @@ class WhisperRunner {
     this.modelPath = modelPath;
     this.timeout = 300000; // 5 minutes default timeout
     this.enable_logs=enable_logs
-    console.log("[WhisperRunner]:", enable_logs)
+    console.log(`[WhisperRunner]: detailed logs ${enable_logs?"enabled":"disabled"}`)
   }
 
   async transcribe(filePath, onProcessSpawned) {

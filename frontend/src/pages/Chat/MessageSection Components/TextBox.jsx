@@ -29,7 +29,7 @@ const TextBox = ({ fromUser = null, message = null, unique_id, sender_id = null,
 
   return (
     message && (
-      <div className="w-full flex px-4 py-0.5">
+      <div className="w-full flex px-4 py-[4.5px]">
         {fromUser ? (
           <div className="flex justify-end w-full">
             <div className="bg-[#F4E6C8] text-[#2F5D50] px-2.5 pt-2.5 pb-2 rounded-2xl rounded-br-none flex flex-col max-w-[70%] shadow-sm">

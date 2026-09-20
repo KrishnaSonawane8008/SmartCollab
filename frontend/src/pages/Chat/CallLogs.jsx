@@ -224,7 +224,7 @@ const LogTab=({value})=>{
                 <div className="ml-auto">
 
                     <button 
-                        className={`flex-shrink-0 rounded-[10px] flex items-center justify-center ${generating?"bg-[#5e8b7e] cursor-not-allowed":"bg-[#2f5d50] hover:scale-[1.08] cursor-pointer"} backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] text-[#f4e6c8] transition-all duration-250 group px-2.5 py-1.5`}
+                        className={`text-nowrap flex-shrink-0 rounded-[10px] flex items-center justify-center ${generating?"bg-[#5e8b7e] cursor-not-allowed":"bg-[#2f5d50] hover:scale-[1.08] cursor-pointer"} backdrop-blur-[8px] shadow-[0_8px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] text-[#f4e6c8] transition-all duration-250 group px-2.5 py-1.5`}
                         disabled={generating}
                         onClick={()=>{stream_summary()}}
 
@@ -299,12 +299,12 @@ const LogTab=({value})=>{
                     
 
                     {
-                        loading===true ? (
+                        loading==true ? (
                             <div className="w-full rounded-[0.5rem] bg-[#f2d8a1] flex flex-col items-center justify-center p-4 mt-2">
                                 <div className="flex items-center gap-1">
-                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:0ms]" />
-                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:150ms]" />
-                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce [animation-delay:300ms]" />
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce-high" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce-high" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-1 h-1 bg-[#2f5d50] rounded-full animate-bounce-high" style={{ animationDelay: '300ms' }} />
                                 </div>
                             </div>
                         ):(
@@ -429,7 +429,7 @@ const Content=()=>{
                                 //     )
                                 // })
 
-                                CallLogs.map((value, index)=>{
+                                CallLogs.toReversed().map((value, index)=>{
                                     // console.log(value)
                                     if(!value) return <></>
                                     return(

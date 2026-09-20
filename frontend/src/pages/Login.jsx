@@ -24,7 +24,7 @@ const Show_Demo_Creds = ({ users_creds, username_input_ref, email_input_ref, pas
   return (
     <div className="fixed top-4 left-4 z-50 bg-[var(--sc-surface-highest)] border border-[var(--sc-outline-variant)] rounded-xl p-3 shadow-sm">
       <p className="text-[10px] font-medium text-[var(--sc-on-surface-muted)] uppercase tracking-wider mb-2">
-        ALL Accounts
+        Test Accounts
       </p>
       <div className="grid grid-cols-2 gap-1 max-h-[200px] overflow-y-auto">
         {users_creds.map((credentials, i) => (

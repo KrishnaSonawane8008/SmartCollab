@@ -10,6 +10,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import ScrollBar from "../common components/ScrollBar"
 import { wsClient } from "../../api/websocket"
 import { isLanguageDominant, getDominantLanguage } from "../../services/translation_service"
+import Tumbleweed from '../../assets/Tumbleweed.svg?react';
+import TumbleweedIcon from "../../assets/Tumbleweed"
 
 const ChatMessagesSection = () => {
   const { communityId, channelId } = useParams()
@@ -131,13 +133,19 @@ const ChatMessagesSection = () => {
           <div className="w-full flex flex-col items-center justify-center"
           >
             {/* FIX: Turned into flex-col-reverse. HTML tree renders from bottom up natively */}
-            <div className="flex flex-col-reverse px-8 w-full bg-transparent"
+            <div className={`flex flex-col-reverse px-8 w-full`}
               
             >
               
               {/* Bottom Spacer is now placed at the TOP of the reverse container */}
               <div className={`${keyboard_open?"h-[366px]":"h-[92px]"} flex-shrink-0 `}></div>
-
+              {data?.Messages?.length==0 &&
+              // bg-[#8A817C]
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F3EF] relative">
+                  <p className="text-[#8A817C] text-sm mt-[200px] font-medium relative">No Chats Yet</p>
+                  <TumbleweedIcon className="h-[15rem] text-[#d4ccbd] top-[200px] absolute" currentColor="#d4ccbd"/>
+                </div>
+              }
               {data?.Messages && Array.isArray(data.Messages) &&
                 [...data.Messages].reverse().map((msg, i, arr) => {
                   const CurrentSentDate = new Date(msg.sent_at).toLocaleDateString('en-IN', {
@@ -188,6 +196,7 @@ const ChatMessagesSection = () => {
                     </div>
                   )
                 })}
+
             </div>
           </div>
         </ScrollBar>

@@ -159,6 +159,22 @@ body {
   background: linear-gradient(135deg, #c5dcd4 0%, #e8f1ed 100%);
 }
 
+@layer utilities {
+  .animate-bounce-high {
+    /* Changed to ease-in-out for a perfectly fluid, continuous wave */
+    animation: bounceHigh 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes bounceHigh {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px); /* Keep or increase this value for height */
+  }
+}
+
 /* ─── Landing Page Animations ─────────────────────────────────── */
 @keyframes slide-up {
   from {
