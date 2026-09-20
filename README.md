@@ -70,6 +70,19 @@ SmartCollab is a real-time collaboration ecosystem designed to eliminate linguis
 
 ---
 
+## 💻 Demo
+
+## Homepage, Auth and UI Navigation
+https://github.com/user-attachments/assets/f5f7a156-f606-4839-af07-60c0525ab824
+
+## Chatting and Chat Translation
+https://github.com/user-attachments/assets/baccf40a-03a7-430f-b4f1-84e88471b66c
+
+## Video/Audio Calling and Call Summarization
+https://github.com/user-attachments/assets/5bac9536-c44b-44d9-9526-bfc97f5fa678
+
+---
+
 ## 📐 Architecture / How It Works
 
 <img src="./readme/sytem arch full.svg" alt="Alt Text" style="width: 100%; height: auto;">
